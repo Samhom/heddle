@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Heddle 综</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M6 5h20M6 27h20M6 5v22M26 5v22" fill="none" stroke="currentColor" stroke-width="1.7"/>
+        <path d="M12 5v22M20 5v22" stroke="currentColor" stroke-width="1.2" opacity=".5"/>
+        <path d="M6 12.5h20M6 19.5h20" stroke="currentColor" stroke-width="1.7"/>
+      </svg>
+      <div>
+        <p class="brand-name">Heddle <span>综</span></p>
+        <p class="brand-sub">穿综、打结、踏板，布面自己出来</p>
+      </div>
+    </div>
+    <p class="face" id="face">经面 50%</p>
+    <p class="steps">上升梭口：布上涂实的一格，是这根经压在这一梭纬线上。</p>
+  </header>
+  <main>
+    <section class="sheet" aria-label="组织图">
+      <figure class="pane threading">
+        <figcaption>穿综 <small>1 号综靠着布</small></figcaption>
+        <div class="cells" id="threading" role="group" aria-label="穿综"></div>
+      </figure>
+      <figure class="pane tie">
+        <figcaption>打结 <small>踏板提起哪几片综</small></figcaption>
+        <div class="cells" id="tieup" role="group" aria-label="打结"></div>
+      </figure>
+      <figure class="pane cloth">
+        <figcaption>布面 <small id="cloth-size">16 经 × 16 纬</small></figcaption>
+        <canvas id="cloth" width="288" height="288" aria-label="布面"></canvas>
+      </figure>
+      <figure class="pane tread">
+        <figcaption>踏板 <small>第一梭在上</small></figcaption>
+        <div class="cells" id="treadling" role="group" aria-label="踏板"></div>
+      </figure>
+    </section>
+  </main>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
