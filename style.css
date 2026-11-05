@@ -54,6 +54,20 @@ button { cursor: pointer; }
 }
 .brand-name span { color: var(--madder); }
 .brand-sub, .steps { color: var(--muted); font-size: 13px; }
+.presets { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill {
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 252, 247, 0.78);
+}
+.pill:hover { border-color: var(--brass); }
+.pill[aria-pressed="true"] {
+  border-color: var(--indigo);
+  background: var(--indigo);
+  color: var(--linen);
+}
+.pill:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 .face {
   margin-left: auto;
   padding: 6px 12px;
@@ -116,7 +130,9 @@ figcaption small {
   border-radius: 2px;
   background: rgba(36, 28, 22, 0.08);
 }
+.cell:hover { background: rgba(166, 132, 61, 0.35); }
 .cell.on { background: var(--indigo); }
+.cell.on:hover { filter: brightness(1.25); }
 .tie .cell.on { background: var(--madder); }
 .tread .cell.on { background: var(--moss); }
 .cell:focus-visible {

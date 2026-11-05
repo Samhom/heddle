@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createDraft, warpFace, warpUp} from '../engine.mjs';
+import {createDraft, editCell, warpFace, warpUp} from '../engine.mjs';
 import {herringbone, plainWeave, satin, twill} from '../drafts.mjs';
 
 function rowBits(row) {
@@ -35,6 +35,21 @@ test('5-end satin sinks one warp in every five', () => {
     assert.equal(row.filter((cell) => !cell).length, 4);
   }
   assert.equal(warpFace(draft).percent, 80);
+});
+
+test('a cell edit changes one end, one tie, or one pick', () => {
+  const draft = plainWeave(4, 4);
+  const moved = editCell(draft, {grid: 'threading', row: 0, col: 0});
+  assert.deepEqual(moved.threading, [1, 1, 0, 1]);
+  assert.deepEqual(draft.threading, [0, 1, 0, 1]);
+  const tied = editCell(draft, {grid: 'tie', row: 1, col: 0});
+  assert.equal(tied.tieUp[0][0], false);
+  assert.equal(draft.tieUp[0][0], true);
+  const stepped = editCell(draft, {grid: 'treadling', row: 0, col: 1});
+  assert.deepEqual(stepped.treadling, [1, 1, 0, 1]);
+  assert.equal(rowBits(warpUp(stepped)[0]), '0101');
+  assert.throws(() => editCell(draft, {grid: 'cloth', row: 0, col: 0}), /没有这一格/);
+  assert.throws(() => editCell(draft, {grid: 'threading', row: 5, col: 0}), /不在这张图上/);
 });
 
 test('a draft rejects counts and cells outside the loom', () => {

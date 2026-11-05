@@ -1,5 +1,5 @@
-import {warpFace, warpUp} from './engine.mjs';
-import {plainWeave} from './drafts.mjs';
+import {editCell, warpFace, warpUp} from './engine.mjs';
+import {PRESETS, plainWeave} from './drafts.mjs';
 
 const CELL = 15;
 const GAP = 3;
@@ -12,13 +12,30 @@ const face = document.querySelector('#face');
 const clothSize = document.querySelector('#cloth-size');
 const ctx = cloth.getContext('2d');
 
-const draft = plainWeave();
+const presetHost = document.querySelector('#presets');
+let draft = plainWeave();
+let pendingFocus = null;
+
+for (const preset of PRESETS) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'pill';
+  button.dataset.preset = preset.id;
+  button.textContent = preset.name;
+  button.title = preset.title;
+  button.addEventListener('click', () => {
+    draft = preset.build();
+    pendingFocus = null;
+    render();
+  });
+  presetHost.append(button);
+}
 
 function shaftAt(row) {
   return draft.shafts - 1 - row;
 }
 
-function paintGrid(host, rows, cols, labelAt, isOn) {
+function paintGrid(host, kind, rows, cols, labelAt, isOn) {
   host.replaceChildren();
   host.style.gridTemplateColumns = `repeat(${cols}, ${CELL}px)`;
   host.style.gridTemplateRows = `repeat(${rows}, ${CELL}px)`;
@@ -33,7 +50,14 @@ function paintGrid(host, rows, cols, labelAt, isOn) {
       button.title = label;
       button.setAttribute('aria-label', label);
       button.setAttribute('aria-pressed', on ? 'true' : 'false');
-      button.tabIndex = row === 0 && col === 0 ? 0 : -1;
+      const focused = pendingFocus?.host === host && pendingFocus.row === row && pendingFocus.col === col;
+      button.tabIndex = focused || (!pendingFocus && row === 0 && col === 0) ? 0 : -1;
+      button.addEventListener('click', () => {
+        draft = editCell(draft, {grid: kind, row, col});
+        pendingFocus = {host, row, col};
+        render();
+      });
+      if (focused) queueMicrotask(() => button.focus());
       fragment.append(button);
     }
   }
@@ -59,12 +83,21 @@ function paintCloth() {
   }
 }
 
+function sameDraft(left, right) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
 function render() {
   const ratio = warpFace(draft);
   face.textContent = `经面 ${ratio.percent}%`;
   clothSize.textContent = `${draft.ends} 经 × ${draft.picks} 纬`;
+  for (const button of presetHost.querySelectorAll('button')) {
+    const preset = PRESETS.find((item) => item.id === button.dataset.preset);
+    button.setAttribute('aria-pressed', preset && sameDraft(draft, preset.build()) ? 'true' : 'false');
+  }
   paintGrid(
     threadingHost,
+    'threading',
     draft.shafts,
     draft.ends,
     (row, col) => `第 ${col + 1} 根经，第 ${shaftAt(row) + 1} 片综`,
@@ -72,6 +105,7 @@ function render() {
   );
   paintGrid(
     tieHost,
+    'tie',
     draft.shafts,
     draft.treadles,
     (row, col) => `第 ${shaftAt(row) + 1} 片综，第 ${col + 1} 个踏板`,
@@ -79,12 +113,14 @@ function render() {
   );
   paintGrid(
     treadHost,
+    'treadling',
     draft.picks,
     draft.treadles,
     (row, col) => `第 ${row + 1} 梭，第 ${col + 1} 个踏板`,
     (row, col) => draft.treadling[row] === col
   );
   paintCloth();
+  pendingFocus = null;
 }
 
 render();

@@ -67,6 +67,38 @@ export function warpUp(draft) {
   return grid;
 }
 
+function requireIndex(value, max, label) {
+  if (!Number.isInteger(value) || value < 0 || value >= max) {
+    throw new Error(`${label}不在这张图上`);
+  }
+  return value;
+}
+
+export function editCell(draft, {grid, row, col}) {
+  if (grid === 'threading') {
+    const shaft = draft.shafts - 1 - requireIndex(row, draft.shafts, '综片');
+    const end = requireIndex(col, draft.ends, '经线');
+    const threading = draft.threading.slice();
+    threading[end] = shaft;
+    return createDraft({...draft, threading});
+  }
+  if (grid === 'tie') {
+    const shaft = draft.shafts - 1 - requireIndex(row, draft.shafts, '综片');
+    const treadle = requireIndex(col, draft.treadles, '踏板');
+    const tieUp = draft.tieUp.map((line) => line.slice());
+    tieUp[shaft][treadle] = !tieUp[shaft][treadle];
+    return createDraft({...draft, tieUp});
+  }
+  if (grid === 'treadling') {
+    const pick = requireIndex(row, draft.picks, '纬线');
+    const treadle = requireIndex(col, draft.treadles, '踏板');
+    const treadling = draft.treadling.slice();
+    treadling[pick] = treadle;
+    return createDraft({...draft, treadling});
+  }
+  throw new Error('没有这一格');
+}
+
 export function warpFace(draft) {
   const grid = warpUp(draft);
   let up = 0;
