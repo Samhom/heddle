@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createDraft, editCell, resize, warpFace, warpUp} from '../engine.mjs';
+import {createDraft, draftFromJSON, editCell, formatDraft, parseDraftText, resize, warpFace, warpUp} from '../engine.mjs';
 import {herringbone, plainWeave, satin, twill} from '../drafts.mjs';
 
 function rowBits(row) {
@@ -70,6 +70,29 @@ test('resizing repeats the draft that is already drawn', () => {
   assert.deepEqual(more.treadling, [0, 1, 2, 3, 0, 1]);
   assert.equal(warpFace(resize(plainWeave(8, 8), {ends: 20, picks: 20})).percent, 50);
   assert.throws(() => resize(draft, {ends: 3}), /经线要在 4 和 80 之间/);
+});
+
+test('a written draft round-trips and rejects anything outside the loom text', () => {
+  const draft = satin(10, 10);
+  const text = formatDraft(draft, {warp: '#ABCDEF', weft: 'blue'});
+  assert.match(text, /^heddle 1\n/);
+  assert.match(text, /warp #abcdef/);
+  assert.match(text, /weft #f7f1e6/);
+  const parsed = parseDraftText(`# 备注\r\n${text}`);
+  assert.deepEqual(parsed.draft, draft);
+  assert.equal(parsed.warp, '#abcdef');
+  assert.equal(parsed.weft, '#f7f1e6');
+  assert.throws(() => parseDraftText('plain weave'), /开头要是 heddle 1/);
+  assert.throws(() => parseDraftText('x'.repeat(20001)), /太长/);
+  assert.throws(() => parseDraftText(text.replace(/threading .*/, 'threading 1e2 1')), /要是 1 到 8/);
+  const stored = draftFromJSON({...draft, warp: '#112233', weft: '#445566', repeat: 2});
+  assert.equal(stored.repeat, 2);
+  assert.equal(stored.warp, '#112233');
+  assert.equal(draftFromJSON({...draft, repeat: 9}).repeat, 1);
+  assert.throws(() => draftFromJSON({...draft, tieUp: draft.tieUp.map((row) => row.map((cell) => (cell ? 1 : 0)))}), /结只能是开或关/);
+  const polluted = JSON.parse('{"ends":4,"picks":4,"shafts":2,"treadles":2,"threading":[0,1,0,1],"tieUp":[[true,false],[false,true]],"treadling":[0,1,0,1],"__proto__":{"polluted":true}}');
+  draftFromJSON(polluted);
+  assert.equal({}.polluted, undefined);
 });
 
 test('a draft rejects counts and cells outside the loom', () => {

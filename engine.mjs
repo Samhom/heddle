@@ -130,3 +130,106 @@ export function warpFace(draft) {
   const total = draft.ends * draft.picks;
   return {up, total, percent: Math.round((up / total) * 100)};
 }
+
+export const DEFAULT_WARP = '#1e2a4a';
+export const DEFAULT_WEFT = '#f7f1e6';
+const TEXT_LIMIT = 20000;
+
+export function normalizeColor(value, fallback) {
+  if (typeof value !== 'string') return fallback;
+  const match = /^#([0-9a-fA-F]{6})$/.exec(value.trim());
+  return match ? `#${match[1].toLowerCase()}` : fallback;
+}
+
+export function formatDraft(draft, yarn = {}) {
+  const warp = normalizeColor(yarn.warp, DEFAULT_WARP);
+  const weft = normalizeColor(yarn.weft, DEFAULT_WEFT);
+  return [
+    'heddle 1',
+    `ends ${draft.ends}`,
+    `picks ${draft.picks}`,
+    `shafts ${draft.shafts}`,
+    `treadles ${draft.treadles}`,
+    `warp ${warp}`,
+    `weft ${weft}`,
+    `threading ${draft.threading.map((value) => value + 1).join(' ')}`,
+    'tie-up',
+    ...draft.tieUp.map((row) => row.map((cell) => (cell ? '1' : '0')).join(' ')),
+    `treadling ${draft.treadling.map((value) => value + 1).join(' ')}`
+  ].join('\n');
+}
+
+function parseCountToken(token, label) {
+  if (!/^\d{1,3}$/.test(token ?? '')) throw new Error(`${label}要是整数`);
+  return Number(token);
+}
+
+function parseOneToEight(token, label) {
+  if (!/^[1-8]$/.test(token ?? '')) throw new Error(`${label}要是 1 到 8`);
+  return Number(token) - 1;
+}
+
+export function parseDraftText(text) {
+  if (typeof text !== 'string' || text.length > TEXT_LIMIT) throw new Error('这份组织图太长');
+  const lines = text.split(/\r?\n/).map((line) => line.trim()).filter((line) => line && !line.startsWith('#'));
+  if (lines[0] !== 'heddle 1') throw new Error('开头要是 heddle 1');
+  const fields = new Map();
+  const tieUp = [];
+  let readingTie = false;
+  for (const line of lines.slice(1)) {
+    if (line === 'tie-up') {
+      readingTie = true;
+      continue;
+    }
+    if (readingTie && /^[01](?:\s+[01])*$/.test(line)) {
+      tieUp.push(line.split(/\s+/).map((cell) => cell === '1'));
+      continue;
+    }
+    readingTie = false;
+    const space = line.indexOf(' ');
+    if (space < 1 || !/^[a-z]+$/.test(line.slice(0, space))) throw new Error('有一行认不出');
+    fields.set(line.slice(0, space), line.slice(space + 1).trim());
+  }
+  const threading = (fields.get('threading') ?? '').split(/\s+/).filter(Boolean).map((token) => parseOneToEight(token, '综片'));
+  const treadling = (fields.get('treadling') ?? '').split(/\s+/).filter(Boolean).map((token) => parseOneToEight(token, '踏板'));
+  const draft = createDraft({
+    ends: parseCountToken(fields.get('ends'), '经线'),
+    picks: parseCountToken(fields.get('picks'), '纬线'),
+    shafts: parseCountToken(fields.get('shafts'), '综片'),
+    treadles: parseCountToken(fields.get('treadles'), '踏板'),
+    threading,
+    tieUp,
+    treadling
+  });
+  return {
+    draft,
+    warp: normalizeColor(fields.get('warp'), DEFAULT_WARP),
+    weft: normalizeColor(fields.get('weft'), DEFAULT_WEFT)
+  };
+}
+
+export function draftFromJSON(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('组织图不是一份记录');
+  if (!Array.isArray(value.tieUp) || value.tieUp.length > LIMITS.shafts.max) throw new Error('打结的综片数不对');
+  const tieUp = value.tieUp.map((row) => {
+    if (!Array.isArray(row) || row.length > LIMITS.treadles.max) throw new Error('结数不对');
+    return row.map((cell) => {
+      if (cell !== true && cell !== false) throw new Error('结只能是开或关');
+      return cell;
+    });
+  });
+  return {
+    draft: createDraft({
+      ends: value.ends,
+      picks: value.picks,
+      shafts: value.shafts,
+      treadles: value.treadles,
+      threading: value.threading,
+      tieUp,
+      treadling: value.treadling
+    }),
+    warp: normalizeColor(value.warp, DEFAULT_WARP),
+    weft: normalizeColor(value.weft, DEFAULT_WEFT),
+    repeat: value.repeat === 2 ? 2 : 1
+  };
+}

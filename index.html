@@ -22,7 +22,7 @@
     </div>
     <div class="presets" id="presets" role="group" aria-label="经典组织"></div>
     <p class="face" id="face">经面 50%</p>
-    <p class="steps">点一格就改这一根经、一个结或一梭。上面四张是可以直接打开的经典组织。</p>
+    <p class="steps">点一格就改。方向键移动，数字键指定综片或踏板。颜色和「看两份」只改变布面怎么看。</p>
   </header>
   <main>
     <div class="toolbar">
@@ -31,6 +31,9 @@
         <label>纬线 <input id="picks" type="number" min="4" max="80" step="1" inputmode="numeric" aria-label="纬线梭数"></label>
         <label>综片 <input id="shafts" type="number" min="2" max="8" step="1" inputmode="numeric" aria-label="综片数"></label>
         <label>踏板 <input id="treadles" type="number" min="2" max="8" step="1" inputmode="numeric" aria-label="踏板数"></label>
+        <label class="yarn">经色 <input id="warp" type="color" value="#1e2a4a" aria-label="经线颜色"></label>
+        <label class="yarn">纬色 <input id="weft" type="color" value="#f7f1e6" aria-label="纬线颜色"></label>
+        <button class="pill" type="button" id="repeat" aria-pressed="false">看两份</button>
       </form>
       <p class="msg" id="size-msg" role="status"></p>
     </div>
@@ -52,6 +55,16 @@
         <div class="cells" id="treadling" role="group" aria-label="踏板"></div>
       </figure>
     </section>
+    <details class="script">
+      <summary>写成文字</summary>
+      <p class="hint">综片和踏板从 1 数。打结第一行是 1 号综，也就是页面上靠布的那一行。结用 1 和 0。</p>
+      <textarea id="script" spellcheck="false" autocomplete="off" aria-label="组织图文字"></textarea>
+      <div class="script-actions">
+        <button class="pill" type="button" id="copy-script">复制</button>
+        <button class="pill" type="button" id="read-script">按这段排</button>
+      </div>
+      <p class="msg" id="script-msg" role="status"></p>
+    </details>
   </main>
   <script type="module" src="app.js"></script>
 </body>
