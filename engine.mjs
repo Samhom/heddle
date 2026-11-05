@@ -99,6 +99,28 @@ export function editCell(draft, {grid, row, col}) {
   throw new Error('没有这一格');
 }
 
+export function resize(draft, patch) {
+  const ends = patch.ends === undefined ? draft.ends : requireCount(patch.ends, '经线', LIMITS.ends);
+  const picks = patch.picks === undefined ? draft.picks : requireCount(patch.picks, '纬线', LIMITS.picks);
+  const shafts = patch.shafts === undefined ? draft.shafts : requireCount(patch.shafts, '综片', LIMITS.shafts);
+  const treadles = patch.treadles === undefined ? draft.treadles : requireCount(patch.treadles, '踏板', LIMITS.treadles);
+  const threadingBase = draft.threading.map((value) => Math.min(value, shafts - 1));
+  const treadlingBase = draft.treadling.map((value) => Math.min(value, treadles - 1));
+  return createDraft({
+    ends,
+    picks,
+    shafts,
+    treadles,
+    threading: Array.from({length: ends}, (_, index) => threadingBase[index % threadingBase.length]),
+    treadling: Array.from({length: picks}, (_, index) => treadlingBase[index % treadlingBase.length]),
+    tieUp: Array.from({length: shafts}, (_, shaft) => (
+      Array.from({length: treadles}, (_, treadle) => (
+        shaft < draft.shafts && treadle < draft.treadles ? draft.tieUp[shaft][treadle] : false
+      ))
+    ))
+  });
+}
+
 export function warpFace(draft) {
   const grid = warpUp(draft);
   let up = 0;

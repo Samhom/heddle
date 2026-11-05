@@ -25,6 +25,15 @@
     <p class="steps">点一格就改这一根经、一个结或一梭。上面四张是可以直接打开的经典组织。</p>
   </header>
   <main>
+    <div class="toolbar">
+      <form class="size" id="size">
+        <label>经线 <input id="ends" type="number" min="4" max="80" step="1" inputmode="numeric" aria-label="经线根数"></label>
+        <label>纬线 <input id="picks" type="number" min="4" max="80" step="1" inputmode="numeric" aria-label="纬线梭数"></label>
+        <label>综片 <input id="shafts" type="number" min="2" max="8" step="1" inputmode="numeric" aria-label="综片数"></label>
+        <label>踏板 <input id="treadles" type="number" min="2" max="8" step="1" inputmode="numeric" aria-label="踏板数"></label>
+      </form>
+      <p class="msg" id="size-msg" role="status"></p>
+    </div>
     <section class="sheet" aria-label="组织图">
       <figure class="pane threading">
         <figcaption>穿综 <small>1 号综靠着布</small></figcaption>

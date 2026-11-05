@@ -1,4 +1,4 @@
-import {editCell, warpFace, warpUp} from './engine.mjs';
+import {LIMITS, editCell, resize, warpFace, warpUp} from './engine.mjs';
 import {PRESETS, plainWeave} from './drafts.mjs';
 
 const CELL = 15;
@@ -10,7 +10,26 @@ const treadHost = document.querySelector('#treadling');
 const cloth = document.querySelector('#cloth');
 const face = document.querySelector('#face');
 const clothSize = document.querySelector('#cloth-size');
+const sizeForm = document.querySelector('#size');
+const sizeMsg = document.querySelector('#size-msg');
+const sizeInputs = {
+  ends: document.querySelector('#ends'),
+  picks: document.querySelector('#picks'),
+  shafts: document.querySelector('#shafts'),
+  treadles: document.querySelector('#treadles')
+};
 const ctx = cloth.getContext('2d');
+
+const sizeLabels = {ends: '经线', picks: '纬线', shafts: '综片', treadles: '踏板'};
+for (const [key, input] of Object.entries(sizeInputs)) {
+  input.min = String(LIMITS[key].min);
+  input.max = String(LIMITS[key].max);
+  input.addEventListener('change', applySize);
+}
+sizeForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  applySize();
+});
 
 const presetHost = document.querySelector('#presets');
 let draft = plainWeave();
@@ -29,6 +48,33 @@ for (const preset of PRESETS) {
     render();
   });
   presetHost.append(button);
+}
+
+function readCount(input, label) {
+  const token = input.value.trim();
+  if (!/^\d{1,3}$/.test(token)) throw new Error(`${label}要是整数`);
+  return Number(token);
+}
+
+function syncSize() {
+  for (const [key, input] of Object.entries(sizeInputs)) input.value = String(draft[key]);
+}
+
+function applySize() {
+  try {
+    draft = resize(draft, {
+      ends: readCount(sizeInputs.ends, sizeLabels.ends),
+      picks: readCount(sizeInputs.picks, sizeLabels.picks),
+      shafts: readCount(sizeInputs.shafts, sizeLabels.shafts),
+      treadles: readCount(sizeInputs.treadles, sizeLabels.treadles)
+    });
+    sizeMsg.textContent = '';
+    pendingFocus = null;
+    render();
+  } catch (error) {
+    sizeMsg.textContent = error instanceof Error ? error.message : '尺寸没有改成';
+    syncSize();
+  }
 }
 
 function shaftAt(row) {
@@ -91,6 +137,7 @@ function render() {
   const ratio = warpFace(draft);
   face.textContent = `经面 ${ratio.percent}%`;
   clothSize.textContent = `${draft.ends} 经 × ${draft.picks} 纬`;
+  syncSize();
   for (const button of presetHost.querySelectorAll('button')) {
     const preset = PRESETS.find((item) => item.id === button.dataset.preset);
     button.setAttribute('aria-pressed', preset && sameDraft(draft, preset.build()) ? 'true' : 'false');

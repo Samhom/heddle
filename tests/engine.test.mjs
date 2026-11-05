@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createDraft, editCell, warpFace, warpUp} from '../engine.mjs';
+import {createDraft, editCell, resize, warpFace, warpUp} from '../engine.mjs';
 import {herringbone, plainWeave, satin, twill} from '../drafts.mjs';
 
 function rowBits(row) {
@@ -50,6 +50,26 @@ test('a cell edit changes one end, one tie, or one pick', () => {
   assert.equal(rowBits(warpUp(stepped)[0]), '0101');
   assert.throws(() => editCell(draft, {grid: 'cloth', row: 0, col: 0}), /没有这一格/);
   assert.throws(() => editCell(draft, {grid: 'threading', row: 5, col: 0}), /不在这张图上/);
+});
+
+test('resizing repeats the draft that is already drawn', () => {
+  const draft = twill(4, 4);
+  const wider = resize(draft, {ends: 8});
+  assert.deepEqual(wider.threading, [0, 1, 2, 3, 0, 1, 2, 3]);
+  assert.equal(wider.tieUp[0][0], true);
+  assert.deepEqual(draft.threading, [0, 1, 2, 3]);
+  const bone = herringbone(6, 6);
+  assert.deepEqual(resize(bone, {ends: 12, picks: 12}).threading, [...bone.threading, ...bone.threading]);
+  const fewer = resize(wider, {shafts: 2});
+  assert.deepEqual(fewer.threading, [0, 1, 1, 1, 0, 1, 1, 1]);
+  assert.equal(fewer.tieUp.length, 2);
+  assert.equal(fewer.tieUp[0][0], true);
+  const more = resize(draft, {treadles: 6, picks: 6});
+  assert.equal(more.tieUp[0].length, 6);
+  assert.equal(more.tieUp[0][5], false);
+  assert.deepEqual(more.treadling, [0, 1, 2, 3, 0, 1]);
+  assert.equal(warpFace(resize(plainWeave(8, 8), {ends: 20, picks: 20})).percent, 50);
+  assert.throws(() => resize(draft, {ends: 3}), /经线要在 4 和 80 之间/);
 });
 
 test('a draft rejects counts and cells outside the loom', () => {
