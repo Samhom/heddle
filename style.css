@@ -76,6 +76,11 @@ button { cursor: pointer; }
   background: rgba(255, 252, 247, 0.7);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.face.loose {
+  border-color: var(--madder);
+  color: var(--madder);
 }
 .steps { max-width: 360px; }
 

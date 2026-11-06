@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createDraft, draftFromJSON, editCell, formatDraft, parseDraftText, resize, warpFace, warpUp} from '../engine.mjs';
+import {createDraft, draftFromJSON, editCell, floatReport, formatDraft, parseDraftText, resize, warpFace, warpUp} from '../engine.mjs';
 import {herringbone, plainWeave, satin, twill} from '../drafts.mjs';
 
 function rowBits(row) {
@@ -35,6 +35,32 @@ test('5-end satin sinks one warp in every five', () => {
     assert.equal(row.filter((cell) => !cell).length, 4);
   }
   assert.equal(warpFace(draft).percent, 80);
+});
+
+test('float length counts across the repeat and flags a loose cloth', () => {
+  assert.deepEqual(floatReport(plainWeave(8, 8)), {warp: 1, weft: 1, loose: false});
+  assert.deepEqual(floatReport(twill(8, 8)), {warp: 2, weft: 2, loose: false});
+  assert.deepEqual(floatReport(satin(20, 20)), {warp: 4, weft: 1, loose: false});
+  const solid = createDraft({
+    ends: 4,
+    picks: 6,
+    shafts: 2,
+    treadles: 2,
+    threading: [0, 0, 0, 0],
+    tieUp: [[true, true], [false, false]],
+    treadling: [0, 0, 0, 0, 0, 0]
+  });
+  assert.deepEqual(floatReport(solid), {warp: 6, weft: 0, loose: true});
+  const open = createDraft({
+    ends: 6,
+    picks: 4,
+    shafts: 2,
+    treadles: 2,
+    threading: [0, 0, 0, 0, 0, 0],
+    tieUp: [[false, false], [false, false]],
+    treadling: [0, 1, 0, 1]
+  });
+  assert.deepEqual(floatReport(open), {warp: 0, weft: 6, loose: true});
 });
 
 test('a cell edit changes one end, one tie, or one pick', () => {

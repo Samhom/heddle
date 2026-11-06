@@ -131,6 +131,52 @@ export function warpFace(draft) {
   return {up, total, percent: Math.round((up / total) * 100)};
 }
 
+function shows(cell, wantWarp) {
+  return wantWarp ? cell === true : cell === false;
+}
+
+function maxRun(line, wantWarp) {
+  const count = line.length;
+  if (count === 0) return 0;
+  let best = 0;
+  let run = 0;
+  for (let index = 0; index < count; index += 1) {
+    if (shows(line[index], wantWarp)) {
+      run += 1;
+      if (run > best) best = run;
+    } else {
+      run = 0;
+    }
+  }
+  if (best === count) return count;
+  let prefix = 0;
+  while (prefix < count && shows(line[prefix], wantWarp)) prefix += 1;
+  let suffix = 0;
+  while (suffix < count - prefix && shows(line[count - 1 - suffix], wantWarp)) suffix += 1;
+  if (prefix > 0 && suffix > 0) {
+    const wrapped = prefix + suffix;
+    if (wrapped > best) best = wrapped;
+  }
+  return best;
+}
+
+export function floatReport(draft) {
+  const grid = warpUp(draft);
+  let warp = 0;
+  let weft = 0;
+  for (let end = 0; end < draft.ends; end += 1) {
+    const column = [];
+    for (let pick = 0; pick < draft.picks; pick += 1) column.push(grid[pick][end]);
+    const run = maxRun(column, true);
+    if (run > warp) warp = run;
+  }
+  for (const row of grid) {
+    const run = maxRun(row, false);
+    if (run > weft) weft = run;
+  }
+  return {warp, weft, loose: warp > 4 || weft > 4};
+}
+
 export const DEFAULT_WARP = '#1e2a4a';
 export const DEFAULT_WEFT = '#f7f1e6';
 const TEXT_LIMIT = 20000;

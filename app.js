@@ -1,4 +1,4 @@
-import {DEFAULT_WARP, DEFAULT_WEFT, LIMITS, draftFromJSON, editCell, formatDraft, normalizeColor, parseDraftText, resize, warpFace, warpUp} from './engine.mjs';
+import {DEFAULT_WARP, DEFAULT_WEFT, LIMITS, draftFromJSON, editCell, floatReport, formatDraft, normalizeColor, parseDraftText, resize, warpFace, warpUp} from './engine.mjs';
 import {PRESETS, plainWeave} from './drafts.mjs';
 
 const CELL = 15;
@@ -187,10 +187,20 @@ function sameDraft(left, right) {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
+function showStats() {
+  const ratio = warpFace(draft);
+  const floats = floatReport(draft);
+  const longest = Math.max(floats.warp, floats.weft);
+  face.textContent = `经面 ${ratio.percent}% · 经浮 ${floats.warp} · 纬浮 ${floats.weft}`;
+  face.classList.toggle('loose', floats.loose);
+  face.title = floats.loose
+    ? `最长浮长 ${longest}，超过 4 根布容易松。循环接到下一份时连着的也算。`
+    : '经浮是一根经连续压住的纬，纬浮是一梭纬连续压住的经。循环接到下一份时连着的也算。';
+}
+
 function render() {
   if (loadNote === '') sizeMsg.textContent = '';
-  const ratio = warpFace(draft);
-  face.textContent = `经面 ${ratio.percent}%`;
+  showStats();
   clothSize.textContent = repeat === 2
     ? `${draft.ends} 经 × ${draft.picks} 纬，并了两份`
     : `${draft.ends} 经 × ${draft.picks} 纬`;
