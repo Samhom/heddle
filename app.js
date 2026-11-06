@@ -155,8 +155,7 @@ function paintGrid(host, kind, rows, cols, labelAt, isOn) {
       button.tabIndex = focused || (!pendingFocus && row === 0 && col === 0) ? 0 : -1;
       button.addEventListener('click', () => {
         if (!commitDraft(editCell(draft, {grid: kind, row, col}))) return;
-        pendingFocus = {host, row, col};
-        render();
+        refreshCell(kind, row, col);
       });
       if (focused) queueMicrotask(() => button.focus());
       fragment.append(button);
@@ -229,6 +228,43 @@ function redo() {
   render();
 }
 
+function markPresets() {
+  for (const button of presetHost.querySelectorAll('button')) {
+    const preset = PRESETS.find((item) => item.id === button.dataset.preset);
+    button.setAttribute('aria-pressed', preset && sameDraft(draft, preset.build()) ? 'true' : 'false');
+  }
+}
+
+function buttonAt(host, row, col, columns) {
+  return host.children[row * columns + col];
+}
+
+function paintPressed(button, on) {
+  button.classList.toggle('on', on);
+  button.setAttribute('aria-pressed', on ? 'true' : 'false');
+}
+
+function refreshCell(kind, row, col) {
+  if (kind === 'threading') {
+    for (let shaftRow = 0; shaftRow < draft.shafts; shaftRow += 1) {
+      paintPressed(buttonAt(threadingHost, shaftRow, col, draft.ends), draft.threading[col] === shaftAt(shaftRow));
+    }
+  } else if (kind === 'tie') {
+    paintPressed(buttonAt(tieHost, row, col, draft.treadles), draft.tieUp[shaftAt(row)][col]);
+  } else if (kind === 'treadling') {
+    for (let treadle = 0; treadle < draft.treadles; treadle += 1) {
+      paintPressed(buttonAt(treadHost, row, treadle, draft.treadles), draft.treadling[row] === treadle);
+    }
+  }
+  if (loadNote === '') sizeMsg.textContent = '';
+  showStats();
+  markPresets();
+  if (!scriptDirty) scriptBox.value = formatDraft(draft, yarn);
+  paintCloth();
+  remember();
+  syncHistory();
+}
+
 function showStats() {
   const ratio = warpFace(draft);
   const floats = floatReport(draft);
@@ -253,10 +289,7 @@ function render() {
   repeatButton.setAttribute('aria-pressed', repeat === 2 ? 'true' : 'false');
   if (!scriptDirty) scriptBox.value = formatDraft(draft, yarn);
   remember();
-  for (const button of presetHost.querySelectorAll('button')) {
-    const preset = PRESETS.find((item) => item.id === button.dataset.preset);
-    button.setAttribute('aria-pressed', preset && sameDraft(draft, preset.build()) ? 'true' : 'false');
-  }
+  markPresets();
   paintGrid(
     threadingHost,
     'threading',
@@ -366,13 +399,14 @@ document.addEventListener('keydown', (event) => {
     event.preventDefault();
     const visualRow = draft.shafts - number;
     if (!commitDraft(editCell(draft, {grid: 'threading', row: visualRow, col}))) return;
-    pendingFocus = {host, row: visualRow, col};
-    render();
+    refreshCell('threading', visualRow, col);
+    buttonAt(threadingHost, visualRow, col, draft.ends)?.focus();
   } else if (host === treadHost && number <= draft.treadles) {
     event.preventDefault();
-    if (!commitDraft(editCell(draft, {grid: 'treadling', row, col: number - 1}))) return;
-    pendingFocus = {host, row, col: number - 1};
-    render();
+    const treadle = number - 1;
+    if (!commitDraft(editCell(draft, {grid: 'treadling', row, col: treadle}))) return;
+    refreshCell('treadling', row, treadle);
+    buttonAt(treadHost, row, treadle, draft.treadles)?.focus();
   }
 });
 
