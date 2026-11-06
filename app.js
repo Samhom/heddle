@@ -1,5 +1,6 @@
 import {DEFAULT_WARP, DEFAULT_WEFT, LIMITS, draftFromJSON, editCell, floatReport, formatDraft, normalizeColor, parseDraftText, resize, warpFace, warpUp} from './engine.mjs';
 import {PRESETS, plainWeave} from './drafts.mjs';
+import {recordChange, redoChange, undoChange} from './history.mjs';
 
 const CELL = 15;
 const GAP = 3;
@@ -15,6 +16,8 @@ const sizeMsg = document.querySelector('#size-msg');
 const warpInput = document.querySelector('#warp');
 const weftInput = document.querySelector('#weft');
 const repeatButton = document.querySelector('#repeat');
+const undoButton = document.querySelector('#undo');
+const redoButton = document.querySelector('#redo');
 const scriptBox = document.querySelector('#script');
 const scriptMsg = document.querySelector('#script-msg');
 const sizeInputs = {
@@ -38,6 +41,8 @@ sizeForm.addEventListener('submit', (event) => {
 
 const presetHost = document.querySelector('#presets');
 let draft = plainWeave();
+let past = [];
+let future = [];
 let yarn = {warp: DEFAULT_WARP, weft: DEFAULT_WEFT};
 let repeat = 1;
 let pendingFocus = null;
@@ -90,7 +95,7 @@ for (const preset of PRESETS) {
   button.textContent = preset.name;
   button.title = preset.title;
   button.addEventListener('click', () => {
-    draft = preset.build();
+    if (!commitDraft(preset.build())) return;
     pendingFocus = null;
     render();
   });
@@ -109,12 +114,13 @@ function syncSize() {
 
 function applySize() {
   try {
-    draft = resize(draft, {
+    const next = resize(draft, {
       ends: readCount(sizeInputs.ends, sizeLabels.ends),
       picks: readCount(sizeInputs.picks, sizeLabels.picks),
       shafts: readCount(sizeInputs.shafts, sizeLabels.shafts),
       treadles: readCount(sizeInputs.treadles, sizeLabels.treadles)
     });
+    commitDraft(next);
     sizeMsg.textContent = '';
     pendingFocus = null;
     render();
@@ -148,7 +154,7 @@ function paintGrid(host, kind, rows, cols, labelAt, isOn) {
       const focused = pendingFocus?.host === host && pendingFocus.row === row && pendingFocus.col === col;
       button.tabIndex = focused || (!pendingFocus && row === 0 && col === 0) ? 0 : -1;
       button.addEventListener('click', () => {
-        draft = editCell(draft, {grid: kind, row, col});
+        if (!commitDraft(editCell(draft, {grid: kind, row, col}))) return;
         pendingFocus = {host, row, col};
         render();
       });
@@ -185,6 +191,42 @@ function paintCloth() {
 
 function sameDraft(left, right) {
   return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function commitDraft(next) {
+  if (sameDraft(draft, next)) return false;
+  const step = recordChange(past, future, draft, next);
+  past = step.past;
+  future = step.future;
+  draft = step.current;
+  return true;
+}
+
+function syncHistory() {
+  undoButton.disabled = past.length === 0;
+  redoButton.disabled = future.length === 0;
+}
+
+function undo() {
+  const step = undoChange(past, future, draft);
+  if (!step) return;
+  past = step.past;
+  future = step.future;
+  draft = step.current;
+  pendingFocus = null;
+  scriptDirty = false;
+  render();
+}
+
+function redo() {
+  const step = redoChange(past, future, draft);
+  if (!step) return;
+  past = step.past;
+  future = step.future;
+  draft = step.current;
+  pendingFocus = null;
+  scriptDirty = false;
+  render();
 }
 
 function showStats() {
@@ -241,6 +283,7 @@ function render() {
   );
   paintCloth();
   pendingFocus = null;
+  syncHistory();
 }
 
 function setYarn(kind, input) {
@@ -273,7 +316,7 @@ document.querySelector('#copy-script').addEventListener('click', async () => {
 document.querySelector('#read-script').addEventListener('click', () => {
   try {
     const parsed = parseDraftText(scriptBox.value);
-    draft = parsed.draft;
+    commitDraft(parsed.draft);
     yarn = {warp: parsed.warp, weft: parsed.weft};
     scriptDirty = false;
     scriptMsg.textContent = '已按这段排好';
@@ -283,7 +326,27 @@ document.querySelector('#read-script').addEventListener('click', () => {
     scriptMsg.textContent = error instanceof Error ? error.message : '这段没有排成';
   }
 });
+function isTyping(target) {
+  return target instanceof HTMLElement && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+}
+
+undoButton.addEventListener('click', undo);
+redoButton.addEventListener('click', redo);
 document.addEventListener('keydown', (event) => {
+  if ((event.ctrlKey || event.metaKey) && !event.altKey && !isTyping(event.target)) {
+    const key = event.key.toLowerCase();
+    if (key === 'z') {
+      event.preventDefault();
+      if (event.shiftKey) redo();
+      else undo();
+      return;
+    }
+    if (key === 'y') {
+      event.preventDefault();
+      redo();
+      return;
+    }
+  }
   const button = event.target;
   if (!(button instanceof HTMLButtonElement) || !button.classList.contains('cell')) return;
   const host = button.parentElement;
@@ -302,12 +365,12 @@ document.addEventListener('keydown', (event) => {
   if (host === threadingHost && number <= draft.shafts) {
     event.preventDefault();
     const visualRow = draft.shafts - number;
-    draft = editCell(draft, {grid: 'threading', row: visualRow, col});
+    if (!commitDraft(editCell(draft, {grid: 'threading', row: visualRow, col}))) return;
     pendingFocus = {host, row: visualRow, col};
     render();
   } else if (host === treadHost && number <= draft.treadles) {
     event.preventDefault();
-    draft = editCell(draft, {grid: 'treadling', row, col: number - 1});
+    if (!commitDraft(editCell(draft, {grid: 'treadling', row, col: number - 1}))) return;
     pendingFocus = {host, row, col: number - 1};
     render();
   }

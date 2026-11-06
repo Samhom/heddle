@@ -10,6 +10,7 @@ const files = new Map([
   ['/app.js', 'app.js'],
   ['/engine.mjs', 'engine.mjs'],
   ['/drafts.mjs', 'drafts.mjs'],
+  ['/history.mjs', 'history.mjs'],
   ['/favicon.svg', 'favicon.svg']
 ]);
 const types = {

@@ -26,6 +26,10 @@
   </header>
   <main>
     <div class="toolbar">
+      <div class="history" role="group" aria-label="撤回">
+        <button class="pill" type="button" id="undo" disabled>撤回</button>
+        <button class="pill" type="button" id="redo" disabled>重做</button>
+      </div>
       <form class="size" id="size">
         <label>经线 <input id="ends" type="number" min="4" max="80" step="1" inputmode="numeric" aria-label="经线根数"></label>
         <label>纬线 <input id="picks" type="number" min="4" max="80" step="1" inputmode="numeric" aria-label="纬线梭数"></label>

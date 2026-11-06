@@ -68,6 +68,9 @@ button { cursor: pointer; }
   color: var(--linen);
 }
 .pill:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+.pill:disabled { opacity: 0.45; cursor: default; }
+.pill:disabled:hover { border-color: var(--line); }
+.history { display: flex; gap: 8px; }
 .face {
   margin-left: auto;
   padding: 6px 12px;

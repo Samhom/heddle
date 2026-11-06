@@ -5,7 +5,7 @@ import test from 'node:test';
 import {createApp} from '../server.mjs';
 
 test('the page is static and only serves the loom itself', async () => {
-  for (const name of ['engine.mjs', 'drafts.mjs', 'app.js', 'server.mjs']) {
+  for (const name of ['engine.mjs', 'drafts.mjs', 'history.mjs', 'app.js', 'server.mjs']) {
     const source = await readFile(new URL(`../${name}`, import.meta.url), 'utf8');
     assert.doesNotMatch(source, /\beval\s*\(/);
     assert.doesNotMatch(source, /\bnew\s+Function\b/);
