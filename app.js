@@ -8,6 +8,12 @@ const GAP = 3;
 const threadingHost = document.querySelector('#threading');
 const tieHost = document.querySelector('#tieup');
 const treadHost = document.querySelector('#treadling');
+const threadShafts = document.querySelector('#thread-shafts');
+const threadEnds = document.querySelector('#thread-ends');
+const tieShafts = document.querySelector('#tie-shafts');
+const tieTreadles = document.querySelector('#tie-treadles');
+const pickNumbers = document.querySelector('#pick-numbers');
+const treadNumbers = document.querySelector('#tread-numbers');
 const cloth = document.querySelector('#cloth');
 const face = document.querySelector('#face');
 const clothSize = document.querySelector('#cloth-size');
@@ -135,6 +141,30 @@ function applySize() {
 
 function shaftAt(row) {
   return draft.shafts - 1 - row;
+}
+
+function fillRuler(host, count, textAt) {
+  host.replaceChildren();
+  for (let index = 0; index < count; index += 1) {
+    const span = document.createElement('span');
+    span.textContent = textAt(index);
+    host.append(span);
+  }
+}
+
+function occasionalNumber(index, count) {
+  const number = index + 1;
+  if (number === 1 || number === count || number % 4 === 0) return String(number);
+  return '';
+}
+
+function paintRulers() {
+  fillRuler(threadShafts, draft.shafts, (row) => String(shaftAt(row) + 1));
+  fillRuler(tieShafts, draft.shafts, (row) => String(shaftAt(row) + 1));
+  fillRuler(threadEnds, draft.ends, (index) => occasionalNumber(index, draft.ends));
+  fillRuler(tieTreadles, draft.treadles, (index) => String(index + 1));
+  fillRuler(pickNumbers, draft.picks, (index) => occasionalNumber(index, draft.picks));
+  fillRuler(treadNumbers, draft.treadles, (index) => String(index + 1));
 }
 
 function paintGrid(host, kind, rows, cols, labelAt, isOn) {
@@ -293,6 +323,7 @@ function render() {
   if (!scriptDirty) scriptBox.value = formatDraft(draft, yarn);
   remember();
   markPresets();
+  paintRulers();
   paintGrid(
     threadingHost,
     'threading',

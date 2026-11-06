@@ -49,19 +49,39 @@
     <section class="sheet" aria-label="组织图">
       <figure class="pane threading">
         <figcaption>穿综 <small>1 号综靠着布</small></figcaption>
-        <div class="cells" id="threading" role="group" aria-label="穿综"></div>
+        <div class="block">
+          <div class="ruler v" id="thread-shafts" aria-hidden="true"></div>
+          <div class="stack">
+            <div class="cells" id="threading" role="group" aria-label="穿综"></div>
+            <div class="ruler h" id="thread-ends" aria-hidden="true"></div>
+          </div>
+        </div>
       </figure>
       <figure class="pane tie">
         <figcaption>打结 <small>踏板提起哪几片综</small></figcaption>
-        <div class="cells" id="tieup" role="group" aria-label="打结"></div>
+        <div class="block">
+          <div class="ruler v" id="tie-shafts" aria-hidden="true"></div>
+          <div class="stack">
+            <div class="cells" id="tieup" role="group" aria-label="打结"></div>
+            <div class="ruler h" id="tie-treadles" aria-hidden="true"></div>
+          </div>
+        </div>
       </figure>
       <figure class="pane cloth">
         <figcaption>布面 <small id="cloth-size">16 经 × 16 纬</small></figcaption>
-        <canvas id="cloth" width="288" height="288" aria-label="布面"></canvas>
+        <div class="cloth-scroll">
+          <canvas id="cloth" width="288" height="288" aria-label="布面"></canvas>
+        </div>
       </figure>
       <figure class="pane tread">
         <figcaption>踏板 <small>第一梭在上</small></figcaption>
-        <div class="cells" id="treadling" role="group" aria-label="踏板"></div>
+        <div class="block">
+          <div class="ruler v" id="pick-numbers" aria-hidden="true"></div>
+          <div class="stack">
+            <div class="cells" id="treadling" role="group" aria-label="踏板"></div>
+            <div class="ruler h" id="tread-numbers" aria-hidden="true"></div>
+          </div>
+        </div>
       </figure>
     </section>
     <details class="script">

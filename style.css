@@ -160,6 +160,32 @@ main {
   justify-content: start;
   width: max-content;
 }
+.block { display: flex; align-items: flex-start; gap: 6px; }
+.stack { display: flex; flex-direction: column; gap: 4px; }
+.ruler {
+  color: var(--faint);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+.ruler span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--cell);
+  height: var(--cell);
+}
+.ruler.v {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  padding-top: 9px;
+}
+.ruler.h {
+  display: flex;
+  gap: var(--gap);
+  padding-left: 9px;
+}
 .threading { grid-area: threading; align-self: end; }
 .tie { grid-area: tie; align-self: end; }
 .cloth { grid-area: cloth; }
@@ -219,4 +245,16 @@ canvas {
   .top { flex-wrap: wrap; gap: 10px 18px; padding-left: 64px; }
   .face { margin-left: 0; }
   .steps { max-width: none; }
+  main { padding: 20px 16px 48px 56px; }
+  .sheet {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "threading"
+      "tie"
+      "cloth"
+      "tread";
+    width: 100%;
+  }
+  .threading, .tie, .cloth, .tread { align-self: stretch; }
+  .block, .cloth-scroll { max-width: 100%; overflow-x: auto; }
 }
