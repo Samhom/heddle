@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createDraft, draftFromJSON, editCell, floatReport, formatDraft, parseDraftText, resize, warpFace, warpUp} from '../engine.mjs';
+import {createDraft, draftFromJSON, editCell, floatReport, formatDraft, invertShed, parseDraftText, resize, reverseTreadling, turnDraft, warpFace, warpUp} from '../engine.mjs';
 import {herringbone, plainWeave, satin, twill} from '../drafts.mjs';
 
 function rowBits(row) {
@@ -61,6 +61,25 @@ test('float length counts across the repeat and flags a loose cloth', () => {
     treadling: [0, 1, 0, 1]
   });
   assert.deepEqual(floatReport(open), {warp: 0, weft: 6, loose: true});
+});
+
+test('inverting, reversing, and turning a draft can be done twice', () => {
+  const draft = twill(8, 6);
+  assert.deepEqual(invertShed(invertShed(draft)), draft);
+  assert.deepEqual(reverseTreadling(reverseTreadling(draft)), draft);
+  assert.deepEqual(turnDraft(turnDraft(draft)), draft);
+  assert.equal(draft.treadling[0], 0);
+  const face = warpFace(satin(20, 20));
+  assert.equal(warpFace(invertShed(satin(20, 20))).up, face.total - face.up);
+  const reversed = reverseTreadling(draft);
+  assert.equal(reversed.treadling[0], draft.treadling.at(-1));
+  assert.deepEqual(draft.treadling, [0, 1, 2, 3, 0, 1]);
+  const turned = turnDraft(draft);
+  assert.equal(turned.ends, draft.picks);
+  assert.equal(turned.picks, draft.ends);
+  assert.equal(turned.shafts, draft.treadles);
+  assert.equal(turned.tieUp[1][2], draft.tieUp[2][1]);
+  assert.deepEqual(turned.threading, draft.treadling);
 });
 
 test('a cell edit changes one end, one tie, or one pick', () => {

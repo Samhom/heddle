@@ -1,4 +1,4 @@
-import {DEFAULT_WARP, DEFAULT_WEFT, LIMITS, draftFromJSON, editCell, floatReport, formatDraft, normalizeColor, parseDraftText, resize, warpFace, warpUp} from './engine.mjs';
+import {DEFAULT_WARP, DEFAULT_WEFT, LIMITS, draftFromJSON, editCell, floatReport, formatDraft, invertShed, normalizeColor, parseDraftText, resize, reverseTreadling, turnDraft, warpFace, warpUp} from './engine.mjs';
 import {PRESETS, plainWeave} from './drafts.mjs';
 import {recordChange, redoChange, undoChange} from './history.mjs';
 
@@ -18,6 +18,9 @@ const weftInput = document.querySelector('#weft');
 const repeatButton = document.querySelector('#repeat');
 const undoButton = document.querySelector('#undo');
 const redoButton = document.querySelector('#redo');
+const invertButton = document.querySelector('#invert');
+const reverseButton = document.querySelector('#reverse');
+const turnButton = document.querySelector('#turn');
 const scriptBox = document.querySelector('#script');
 const scriptMsg = document.querySelector('#script-msg');
 const sizeInputs = {
@@ -363,8 +366,17 @@ function isTyping(target) {
   return target instanceof HTMLElement && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
 }
 
+function applyMove(change) {
+  if (!commitDraft(change(draft))) return;
+  pendingFocus = null;
+  render();
+}
+
 undoButton.addEventListener('click', undo);
 redoButton.addEventListener('click', redo);
+invertButton.addEventListener('click', () => applyMove(invertShed));
+reverseButton.addEventListener('click', () => applyMove(reverseTreadling));
+turnButton.addEventListener('click', () => applyMove(turnDraft));
 document.addEventListener('keydown', (event) => {
   if ((event.ctrlKey || event.metaKey) && !event.altKey && !isTyping(event.target)) {
     const key = event.key.toLowerCase();

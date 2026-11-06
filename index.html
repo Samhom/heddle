@@ -30,6 +30,11 @@
         <button class="pill" type="button" id="undo" disabled>撤回</button>
         <button class="pill" type="button" id="redo" disabled>重做</button>
       </div>
+      <div class="moves" role="group" aria-label="翻动组织">
+        <button class="pill" type="button" id="invert" title="每个结反过来，看布的另一面">反面</button>
+        <button class="pill" type="button" id="reverse" title="从最后一梭倒着踩，斜纹会换方向">倒踏</button>
+        <button class="pill" type="button" id="turn" title="穿综和踏板对调，打结转置">转图</button>
+      </div>
       <form class="size" id="size">
         <label>经线 <input id="ends" type="number" min="4" max="80" step="1" inputmode="numeric" aria-label="经线根数"></label>
         <label>纬线 <input id="picks" type="number" min="4" max="80" step="1" inputmode="numeric" aria-label="纬线梭数"></label>

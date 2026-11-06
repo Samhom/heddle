@@ -121,6 +121,34 @@ export function resize(draft, patch) {
   });
 }
 
+export function invertShed(draft) {
+  return createDraft({
+    ...draft,
+    tieUp: draft.tieUp.map((row) => row.map((cell) => !cell))
+  });
+}
+
+export function reverseTreadling(draft) {
+  return createDraft({
+    ...draft,
+    treadling: draft.treadling.slice().reverse()
+  });
+}
+
+export function turnDraft(draft) {
+  return createDraft({
+    ends: draft.picks,
+    picks: draft.ends,
+    shafts: draft.treadles,
+    treadles: draft.shafts,
+    threading: draft.treadling.slice(),
+    treadling: draft.threading.slice(),
+    tieUp: Array.from({length: draft.treadles}, (_, shaft) => (
+      Array.from({length: draft.shafts}, (_, treadle) => draft.tieUp[treadle][shaft])
+    ))
+  });
+}
+
 export function warpFace(draft) {
   const grid = warpUp(draft);
   let up = 0;
