@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {clothRepeat, createDraft, draftFromJSON, editCell, floatReport, formatDraft, invertShed, looseCells, parseDraftText, resize, reverseTreadling, turnDraft, warpFace, warpUp} from '../engine.mjs';
+import {clothRepeat, createDraft, draftFromJSON, editCell, floatReport, formatDraft, invertShed, loomNotes, looseCells, parseDraftText, resize, reverseTreadling, turnDraft, warpFace, warpUp} from '../engine.mjs';
 import {herringbone, plainWeave, satin, twill} from '../drafts.mjs';
 
 function rowBits(row) {
@@ -158,6 +158,16 @@ test('a cell edit changes one end, one tie, or one pick', () => {
   assert.equal(rowBits(warpUp(stepped)[0]), '0101');
   assert.throws(() => editCell(draft, {grid: 'cloth', row: 0, col: 0}), /没有这一格/);
   assert.throws(() => editCell(draft, {grid: 'threading', row: 5, col: 0}), /不在这张图上/);
+});
+
+test('empty shafts and treadles that lift nothing are named', () => {
+  assert.deepEqual(loomNotes(plainWeave()), []);
+  assert.deepEqual(loomNotes(resize(twill(4, 4), {shafts: 6})), ['第 5、6 片综没有经']);
+  assert.deepEqual(loomNotes(resize(twill(4, 4), {treadles: 6})), ['第 5、6 个踏板没有梭']);
+  const plain = plainWeave(4, 4);
+  const dead = createDraft({...plain, tieUp: [[false, false], [false, true]]});
+  assert.deepEqual(loomNotes(dead), ['第 1 个踏板一块综都没提']);
+  assert.deepEqual(loomNotes(plain), []);
 });
 
 test('resizing repeats the draft that is already drawn', () => {

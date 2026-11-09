@@ -1,4 +1,4 @@
-import {DEFAULT_WARP, DEFAULT_WEFT, LIMITS, clothRepeat, draftFromJSON, editCell, floatReport, formatDraft, invertShed, looseCells, normalizeColor, parseDraftText, resize, reverseTreadling, turnDraft, warpFace, warpUp} from './engine.mjs';
+import {DEFAULT_WARP, DEFAULT_WEFT, LIMITS, clothRepeat, draftFromJSON, editCell, floatReport, formatDraft, invertShed, loomNotes, looseCells, normalizeColor, parseDraftText, resize, reverseTreadling, turnDraft, warpFace, warpUp} from './engine.mjs';
 import {PRESETS, plainWeave} from './drafts.mjs';
 import {recordChange, redoChange, undoChange} from './history.mjs';
 
@@ -19,6 +19,7 @@ const face = document.querySelector('#face');
 const clothSize = document.querySelector('#cloth-size');
 const sizeForm = document.querySelector('#size');
 const sizeMsg = document.querySelector('#size-msg');
+const loomNote = document.querySelector('#loom');
 const warpInput = document.querySelector('#warp');
 const weftInput = document.querySelector('#weft');
 const repeatButton = document.querySelector('#repeat');
@@ -347,6 +348,7 @@ function showStats() {
   face.title = floats.loose
     ? `最长浮长 ${longest}，超过 4 根布容易松，出在${places.join('，')}。布面上用铜色圈出。循环接到下一份时连着的也算。`
     : '经浮是一根经连续压住的纬，纬浮是一梭纬连续压住的经。循环接到下一份时连着的也算。';
+  loomNote.textContent = loomNotes(draft).join('。');
 }
 
 function render() {

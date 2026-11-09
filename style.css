@@ -117,6 +117,8 @@ main {
 }
 .size input:focus-visible { outline: 2px solid var(--brass); outline-offset: 1px; }
 .msg { margin: 0; min-height: 1.2em; color: var(--madder); font-size: 13px; }
+.note { margin: 0; color: var(--madder); font-size: 13px; }
+.note:empty { display: none; }
 .yarn input[type="color"] {
   width: 42px;
   height: 28px;

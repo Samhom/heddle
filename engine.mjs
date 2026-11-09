@@ -149,6 +149,36 @@ export function turnDraft(draft) {
   });
 }
 
+export function loomNotes(draft) {
+  const notes = [];
+  const usedShafts = new Set(draft.threading);
+  const emptyShafts = [];
+  for (let shaft = 0; shaft < draft.shafts; shaft += 1) {
+    if (!usedShafts.has(shaft)) emptyShafts.push(shaft + 1);
+  }
+  if (emptyShafts.length > 0) notes.push(`第 ${emptyShafts.join('、')} 片综没有经`);
+  const usedTreadles = new Set(draft.treadling);
+  const idle = [];
+  const dead = [];
+  for (let treadle = 0; treadle < draft.treadles; treadle += 1) {
+    if (!usedTreadles.has(treadle)) {
+      idle.push(treadle + 1);
+      continue;
+    }
+    let lifts = false;
+    for (const row of draft.tieUp) {
+      if (row[treadle]) {
+        lifts = true;
+        break;
+      }
+    }
+    if (!lifts) dead.push(treadle + 1);
+  }
+  if (idle.length > 0) notes.push(`第 ${idle.join('、')} 个踏板没有梭`);
+  if (dead.length > 0) notes.push(`第 ${dead.join('、')} 个踏板一块综都没提`);
+  return notes;
+}
+
 export function sequenceRepeat(values) {
   const count = values.length;
   for (let size = 1; size <= count; size += 1) {
