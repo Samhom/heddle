@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {clothRepeat, createDraft, draftFromJSON, editCell, floatReport, formatDraft, invertShed, loomNotes, looseCells, parseDraftText, pointedThreading, resize, reverseTreadling, straightThreading, treadleAsDrawn, turnDraft, warpFace, warpUp} from '../engine.mjs';
+import {DEFAULT_WARP_ALT, clothRepeat, createDraft, draftFromJSON, editCell, floatReport, formatDraft, invertShed, loomNotes, looseCells, parseDraftText, pointedThreading, resize, reverseTreadling, straightThreading, stripeColor, treadleAsDrawn, turnDraft, warpFace, warpUp} from '../engine.mjs';
 import {herringbone, plainWeave, satin, twill} from '../drafts.mjs';
 
 function rowBits(row) {
@@ -237,6 +237,31 @@ test('a written draft round-trips and rejects anything outside the loom text', (
   const polluted = JSON.parse('{"ends":4,"picks":4,"shafts":2,"treadles":2,"threading":[0,1,0,1],"tieUp":[[true,false],[false,true]],"treadling":[0,1,0,1],"__proto__":{"polluted":true}}');
   draftFromJSON(polluted);
   assert.equal({}.polluted, undefined);
+});
+
+test('stripes alternate by a block and stay inside the written draft', () => {
+  assert.equal(stripeColor(0, 2, '#111111', '#222222'), '#111111');
+  assert.equal(stripeColor(2, 2, '#111111', '#222222'), '#222222');
+  assert.equal(stripeColor(3, 2, '#111111', '#222222'), '#222222');
+  assert.equal(stripeColor(4, 2, '#111111', '#222222'), '#111111');
+  assert.equal(stripeColor(1, 0, '#111111', '#222222'), '#111111');
+  const text = formatDraft(twill(8, 8), {warp: '#112233', weft: '#445566', warpAlt: '#ABCDEF', weftAlt: 'nope', warpBlock: 2, weftBlock: 9});
+  assert.match(text, /warp-stripe 2 #abcdef/);
+  assert.match(text, /weft-stripe 0 #c4b49a/);
+  const parsed = parseDraftText(text);
+  assert.equal(parsed.warpBlock, 2);
+  assert.equal(parsed.warpAlt, '#abcdef');
+  assert.equal(parsed.weftBlock, 0);
+  assert.equal(parsed.weftAlt, '#c4b49a');
+  assert.equal(parseDraftText(text.replace(/\nwarp-stripe.*\nweft-stripe.*/, '')).warpBlock, 0);
+  assert.throws(() => parseDraftText(text.replace('warp-stripe 2 #abcdef', 'warp-stripe 2 red')), /经隔/);
+  assert.throws(() => parseDraftText(text.replace('warp-stripe 2 #abcdef', 'warp-stripe 9 #abcdef')), /经隔/);
+  assert.throws(() => parseDraftText(text.replace('warp-stripe 2 #abcdef', 'warp-stripe 2 #abcdef;x')), /经隔/);
+  const stored = draftFromJSON({...plainWeave(4, 4), warpBlock: 12, warpAlt: 'red', weftBlock: 2, weftAlt: '#ABCDEF'});
+  assert.equal(stored.warpBlock, 0);
+  assert.equal(stored.warpAlt, DEFAULT_WARP_ALT);
+  assert.equal(stored.weftBlock, 2);
+  assert.equal(stored.weftAlt, '#abcdef');
 });
 
 test('a draft rejects counts and cells outside the loom', () => {

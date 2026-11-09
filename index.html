@@ -46,7 +46,11 @@
         <label>综片 <input id="shafts" type="number" min="2" max="8" step="1" inputmode="numeric" aria-label="综片数"></label>
         <label>踏板 <input id="treadles" type="number" min="2" max="8" step="1" inputmode="numeric" aria-label="踏板数"></label>
         <label class="yarn">经色 <input id="warp" type="color" value="#1e2a4a" aria-label="经线颜色"></label>
+        <label class="yarn">经间 <input id="warp-alt" type="color" value="#8d3b32" aria-label="经线隔色"></label>
+        <label>经隔 <input id="warp-block" type="number" min="0" max="8" step="1" inputmode="numeric" value="0" aria-label="经线隔几根换色" title="0 是单色，2 是两根一换"></label>
         <label class="yarn">纬色 <input id="weft" type="color" value="#f7f1e6" aria-label="纬线颜色"></label>
+        <label class="yarn">纬间 <input id="weft-alt" type="color" value="#c4b49a" aria-label="纬线隔色"></label>
+        <label>纬隔 <input id="weft-block" type="number" min="0" max="8" step="1" inputmode="numeric" value="0" aria-label="纬线隔几梭换色" title="0 是单色，2 是两梭一换"></label>
         <button class="pill" type="button" id="repeat" aria-pressed="false">看两份</button>
       </form>
       <p class="msg" id="size-msg" role="status"></p>

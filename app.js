@@ -1,4 +1,4 @@
-import {DEFAULT_WARP, DEFAULT_WEFT, LIMITS, clothRepeat, draftFromJSON, editCell, floatReport, formatDraft, invertShed, loomNotes, looseCells, normalizeColor, parseDraftText, pointedThreading, resize, reverseTreadling, straightThreading, treadleAsDrawn, turnDraft, warpFace, warpUp} from './engine.mjs';
+import {DEFAULT_WARP, DEFAULT_WARP_ALT, DEFAULT_WEFT, DEFAULT_WEFT_ALT, LIMITS, clothRepeat, draftFromJSON, editCell, floatReport, formatDraft, invertShed, loomNotes, looseCells, normalizeColor, parseDraftText, pointedThreading, resize, reverseTreadling, straightThreading, stripeColor, treadleAsDrawn, turnDraft, warpFace, warpUp} from './engine.mjs';
 import {PRESETS, plainWeave} from './drafts.mjs';
 import {recordChange, redoChange, undoChange} from './history.mjs';
 
@@ -22,6 +22,10 @@ const sizeMsg = document.querySelector('#size-msg');
 const loomNote = document.querySelector('#loom');
 const warpInput = document.querySelector('#warp');
 const weftInput = document.querySelector('#weft');
+const warpAltInput = document.querySelector('#warp-alt');
+const weftAltInput = document.querySelector('#weft-alt');
+const warpBlockInput = document.querySelector('#warp-block');
+const weftBlockInput = document.querySelector('#weft-block');
 const repeatButton = document.querySelector('#repeat');
 const undoButton = document.querySelector('#undo');
 const redoButton = document.querySelector('#redo');
@@ -56,7 +60,7 @@ const presetHost = document.querySelector('#presets');
 let draft = plainWeave();
 let past = [];
 let future = [];
-let yarn = {warp: DEFAULT_WARP, weft: DEFAULT_WEFT};
+let yarn = {warp: DEFAULT_WARP, weft: DEFAULT_WEFT, warpAlt: DEFAULT_WARP_ALT, weftAlt: DEFAULT_WEFT_ALT, warpBlock: 0, weftBlock: 0};
 let repeat = 1;
 let pendingFocus = null;
 let loadNote = '';
@@ -70,7 +74,14 @@ function recall() {
     if (!raw || raw.length > 20000) return;
     const stored = draftFromJSON(JSON.parse(raw));
     draft = stored.draft;
-    yarn = {warp: stored.warp, weft: stored.weft};
+    yarn = {
+      warp: stored.warp,
+      weft: stored.weft,
+      warpAlt: stored.warpAlt,
+      weftAlt: stored.weftAlt,
+      warpBlock: stored.warpBlock,
+      weftBlock: stored.weftBlock
+    };
     repeat = stored.repeat;
   } catch {
     loadNote = '上次的组织图读不出来，先打开平纹';
@@ -89,6 +100,10 @@ function remember() {
       treadling: draft.treadling,
       warp: yarn.warp,
       weft: yarn.weft,
+      warpAlt: yarn.warpAlt,
+      weftAlt: yarn.weftAlt,
+      warpBlock: yarn.warpBlock,
+      weftBlock: yarn.weftBlock,
       repeat
     });
     if (payload.length > 20000) return;
@@ -222,7 +237,9 @@ function paintCloth() {
         for (let end = 0; end < draft.ends; end += 1) {
           const x = (copyX * draft.ends + end) * step;
           const y = (copyY * draft.picks + pick) * step;
-          ctx.fillStyle = grid[pick][end] ? yarn.warp : yarn.weft;
+          ctx.fillStyle = grid[pick][end]
+            ? stripeColor(copyX * draft.ends + end, yarn.warpBlock, yarn.warp, yarn.warpAlt)
+            : stripeColor(copyY * draft.picks + pick, yarn.weftBlock, yarn.weft, yarn.weftAlt);
           ctx.fillRect(x, y, CELL, CELL);
           if (loose.marks[pick][end]) ctx.strokeRect(x + 1, y + 1, CELL - 2, CELL - 2);
         }
@@ -359,10 +376,8 @@ function render() {
   showStats();
   syncClothCaption();
   syncSize();
-  warpInput.value = yarn.warp;
-  weftInput.value = yarn.weft;
-  repeatButton.textContent = repeat === 1 ? '看两份' : '看一份';
-  repeatButton.setAttribute('aria-pressed', repeat === 2 ? 'true' : 'false');
+  syncYarnInputs();
+  syncRepeat();
   if (!scriptDirty) scriptBox.value = formatDraft(draft, yarn);
   remember();
   markPresets();
@@ -396,16 +411,55 @@ function render() {
   syncHistory();
 }
 
-function setYarn(kind, input) {
-  yarn[kind] = normalizeColor(input.value, kind === 'warp' ? DEFAULT_WARP : DEFAULT_WEFT);
-  render();
+function syncYarnInputs() {
+  warpInput.value = yarn.warp;
+  weftInput.value = yarn.weft;
+  warpAltInput.value = yarn.warpAlt;
+  weftAltInput.value = yarn.weftAlt;
+  warpBlockInput.value = String(yarn.warpBlock);
+  weftBlockInput.value = String(yarn.weftBlock);
 }
 
-warpInput.addEventListener('input', () => setYarn('warp', warpInput));
-weftInput.addEventListener('input', () => setYarn('weft', weftInput));
+function syncRepeat() {
+  repeatButton.textContent = repeat === 1 ? '看两份' : '看一份';
+  repeatButton.setAttribute('aria-pressed', repeat === 2 ? 'true' : 'false');
+}
+
+function paintView() {
+  syncYarnInputs();
+  syncRepeat();
+  syncClothCaption();
+  if (!scriptDirty) scriptBox.value = formatDraft(draft, yarn);
+  paintCloth();
+  remember();
+}
+
+function setYarn(kind, input, fallback) {
+  yarn[kind] = normalizeColor(input.value, fallback);
+  paintView();
+}
+
+function applyBlock(kind, input) {
+  const token = input.value.trim();
+  if (!/^[0-8]$/.test(token)) {
+    sizeMsg.textContent = '隔色要是 0 到 8';
+    input.value = String(yarn[kind]);
+    return;
+  }
+  yarn[kind] = Number(token);
+  if (loadNote === '') sizeMsg.textContent = '';
+  paintView();
+}
+
+warpInput.addEventListener('input', () => setYarn('warp', warpInput, DEFAULT_WARP));
+weftInput.addEventListener('input', () => setYarn('weft', weftInput, DEFAULT_WEFT));
+warpAltInput.addEventListener('input', () => setYarn('warpAlt', warpAltInput, DEFAULT_WARP_ALT));
+weftAltInput.addEventListener('input', () => setYarn('weftAlt', weftAltInput, DEFAULT_WEFT_ALT));
+warpBlockInput.addEventListener('change', () => applyBlock('warpBlock', warpBlockInput));
+weftBlockInput.addEventListener('change', () => applyBlock('weftBlock', weftBlockInput));
 repeatButton.addEventListener('click', () => {
   repeat = repeat === 2 ? 1 : 2;
-  render();
+  paintView();
 });
 scriptBox.addEventListener('input', () => {
   scriptDirty = true;
@@ -427,7 +481,14 @@ document.querySelector('#read-script').addEventListener('click', () => {
   try {
     const parsed = parseDraftText(scriptBox.value);
     commitDraft(parsed.draft);
-    yarn = {warp: parsed.warp, weft: parsed.weft};
+    yarn = {
+      warp: parsed.warp,
+      weft: parsed.weft,
+      warpAlt: parsed.warpAlt,
+      weftAlt: parsed.weftAlt,
+      warpBlock: parsed.warpBlock,
+      weftBlock: parsed.weftBlock
+    };
     scriptDirty = false;
     scriptMsg.textContent = '已按这段排好';
     pendingFocus = null;

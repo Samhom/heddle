@@ -359,7 +359,18 @@ export function looseCells(draft) {
 
 export const DEFAULT_WARP = '#1e2a4a';
 export const DEFAULT_WEFT = '#f7f1e6';
+export const DEFAULT_WARP_ALT = '#8d3b32';
+export const DEFAULT_WEFT_ALT = '#c4b49a';
 const TEXT_LIMIT = 20000;
+
+export function clampBlock(value) {
+  return Number.isInteger(value) && value >= 0 && value <= 8 ? value : 0;
+}
+
+export function stripeColor(index, block, main, alt) {
+  if (!Number.isInteger(block) || block <= 0) return main;
+  return Math.floor(index / block) % 2 === 0 ? main : alt;
+}
 
 export function normalizeColor(value, fallback) {
   if (typeof value !== 'string') return fallback;
@@ -370,6 +381,10 @@ export function normalizeColor(value, fallback) {
 export function formatDraft(draft, yarn = {}) {
   const warp = normalizeColor(yarn.warp, DEFAULT_WARP);
   const weft = normalizeColor(yarn.weft, DEFAULT_WEFT);
+  const warpAlt = normalizeColor(yarn.warpAlt, DEFAULT_WARP_ALT);
+  const weftAlt = normalizeColor(yarn.weftAlt, DEFAULT_WEFT_ALT);
+  const warpBlock = clampBlock(yarn.warpBlock);
+  const weftBlock = clampBlock(yarn.weftBlock);
   return [
     'heddle 1',
     `ends ${draft.ends}`,
@@ -378,6 +393,8 @@ export function formatDraft(draft, yarn = {}) {
     `treadles ${draft.treadles}`,
     `warp ${warp}`,
     `weft ${weft}`,
+    `warp-stripe ${warpBlock} ${warpAlt}`,
+    `weft-stripe ${weftBlock} ${weftAlt}`,
     `threading ${draft.threading.map((value) => value + 1).join(' ')}`,
     'tie-up',
     ...draft.tieUp.map((row) => row.map((cell) => (cell ? '1' : '0')).join(' ')),
@@ -393,6 +410,12 @@ function parseCountToken(token, label) {
 function parseOneToEight(token, label) {
   if (!/^[1-8]$/.test(token ?? '')) throw new Error(`${label}要是 1 到 8`);
   return Number(token) - 1;
+}
+
+function parseStripe(value, label) {
+  const match = /^([0-8])\s+(#[0-9a-fA-F]{6})$/.exec(value ?? '');
+  if (!match) throw new Error(`${label}要是 0 到 8，再加一个颜色`);
+  return {block: Number(match[1]), color: match[2].toLowerCase()};
 }
 
 export function parseDraftText(text) {
@@ -413,7 +436,7 @@ export function parseDraftText(text) {
     }
     readingTie = false;
     const space = line.indexOf(' ');
-    if (space < 1 || !/^[a-z]+$/.test(line.slice(0, space))) throw new Error('有一行认不出');
+    if (space < 1 || !/^[a-z]+(?:-[a-z]+)*$/.test(line.slice(0, space))) throw new Error('有一行认不出');
     fields.set(line.slice(0, space), line.slice(space + 1).trim());
   }
   const threading = (fields.get('threading') ?? '').split(/\s+/).filter(Boolean).map((token) => parseOneToEight(token, '综片'));
@@ -427,10 +450,20 @@ export function parseDraftText(text) {
     tieUp,
     treadling
   });
+  const warpStripe = fields.has('warp-stripe')
+    ? parseStripe(fields.get('warp-stripe'), '经隔')
+    : {block: 0, color: DEFAULT_WARP_ALT};
+  const weftStripe = fields.has('weft-stripe')
+    ? parseStripe(fields.get('weft-stripe'), '纬隔')
+    : {block: 0, color: DEFAULT_WEFT_ALT};
   return {
     draft,
     warp: normalizeColor(fields.get('warp'), DEFAULT_WARP),
-    weft: normalizeColor(fields.get('weft'), DEFAULT_WEFT)
+    weft: normalizeColor(fields.get('weft'), DEFAULT_WEFT),
+    warpAlt: warpStripe.color,
+    weftAlt: weftStripe.color,
+    warpBlock: warpStripe.block,
+    weftBlock: weftStripe.block
   };
 }
 
@@ -456,6 +489,10 @@ export function draftFromJSON(value) {
     }),
     warp: normalizeColor(value.warp, DEFAULT_WARP),
     weft: normalizeColor(value.weft, DEFAULT_WEFT),
+    warpAlt: normalizeColor(value.warpAlt, DEFAULT_WARP_ALT),
+    weftAlt: normalizeColor(value.weftAlt, DEFAULT_WEFT_ALT),
+    warpBlock: clampBlock(value.warpBlock),
+    weftBlock: clampBlock(value.weftBlock),
     repeat: value.repeat === 2 ? 2 : 1
   };
 }
