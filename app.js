@@ -1,4 +1,4 @@
-import {DEFAULT_WARP, DEFAULT_WEFT, LIMITS, draftFromJSON, editCell, floatReport, formatDraft, invertShed, normalizeColor, parseDraftText, resize, reverseTreadling, turnDraft, warpFace, warpUp} from './engine.mjs';
+import {DEFAULT_WARP, DEFAULT_WEFT, LIMITS, draftFromJSON, editCell, floatReport, formatDraft, invertShed, looseCells, normalizeColor, parseDraftText, resize, reverseTreadling, turnDraft, warpFace, warpUp} from './engine.mjs';
 import {PRESETS, plainWeave} from './drafts.mjs';
 import {recordChange, redoChange, undoChange} from './history.mjs';
 
@@ -209,16 +209,40 @@ function paintCloth() {
   cloth.style.height = `${height}px`;
   ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
   const grid = warpUp(draft);
+  const loose = looseCells(draft);
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = '#a6843d';
   for (let copyY = 0; copyY < copies; copyY += 1) {
     for (let copyX = 0; copyX < copies; copyX += 1) {
       for (let pick = 0; pick < draft.picks; pick += 1) {
         for (let end = 0; end < draft.ends; end += 1) {
+          const x = (copyX * draft.ends + end) * step;
+          const y = (copyY * draft.picks + pick) * step;
           ctx.fillStyle = grid[pick][end] ? yarn.warp : yarn.weft;
-          ctx.fillRect((copyX * draft.ends + end) * step, (copyY * draft.picks + pick) * step, CELL, CELL);
+          ctx.fillRect(x, y, CELL, CELL);
+          if (loose.marks[pick][end]) ctx.strokeRect(x + 1, y + 1, CELL - 2, CELL - 2);
         }
       }
     }
   }
+}
+
+function compactNumbers(numbers) {
+  if (numbers.length === 0) return '';
+  const parts = [];
+  let start = numbers[0];
+  let previous = numbers[0];
+  for (const number of numbers.slice(1)) {
+    if (number === previous + 1) {
+      previous = number;
+      continue;
+    }
+    parts.push(start === previous ? String(start) : `${start}–${previous}`);
+    start = number;
+    previous = number;
+  }
+  parts.push(start === previous ? String(start) : `${start}–${previous}`);
+  return parts.join('、');
 }
 
 function sameDraft(left, right) {
@@ -301,11 +325,15 @@ function refreshCell(kind, row, col) {
 function showStats() {
   const ratio = warpFace(draft);
   const floats = floatReport(draft);
+  const loose = looseCells(draft);
   const longest = Math.max(floats.warp, floats.weft);
   face.textContent = `经面 ${ratio.percent}% · 经浮 ${floats.warp} · 纬浮 ${floats.weft}`;
   face.classList.toggle('loose', floats.loose);
+  const places = [];
+  if (loose.warpEnds.length > 0) places.push(`第 ${compactNumbers(loose.warpEnds)} 根经`);
+  if (loose.weftPicks.length > 0) places.push(`第 ${compactNumbers(loose.weftPicks)} 梭`);
   face.title = floats.loose
-    ? `最长浮长 ${longest}，超过 4 根布容易松。循环接到下一份时连着的也算。`
+    ? `最长浮长 ${longest}，超过 4 根布容易松，出在${places.join('，')}。布面上用铜色圈出。循环接到下一份时连着的也算。`
     : '经浮是一根经连续压住的纬，纬浮是一梭纬连续压住的经。循环接到下一份时连着的也算。';
 }
 

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createDraft, draftFromJSON, editCell, floatReport, formatDraft, invertShed, parseDraftText, resize, reverseTreadling, turnDraft, warpFace, warpUp} from '../engine.mjs';
+import {createDraft, draftFromJSON, editCell, floatReport, formatDraft, invertShed, looseCells, parseDraftText, resize, reverseTreadling, turnDraft, warpFace, warpUp} from '../engine.mjs';
 import {herringbone, plainWeave, satin, twill} from '../drafts.mjs';
 
 function rowBits(row) {
@@ -61,6 +61,52 @@ test('float length counts across the repeat and flags a loose cloth', () => {
     treadling: [0, 1, 0, 1]
   });
   assert.deepEqual(floatReport(open), {warp: 0, weft: 6, loose: true});
+});
+
+test('only floats longer than four are marked, including across the repeat', () => {
+  assert.deepEqual(looseCells(plainWeave(8, 8)), {
+    marks: Array.from({length: 8}, () => Array(8).fill(false)),
+    warpEnds: [],
+    weftPicks: []
+  });
+  assert.deepEqual(looseCells(satin(10, 10)).warpEnds, []);
+  const solid = createDraft({
+    ends: 4,
+    picks: 6,
+    shafts: 2,
+    treadles: 2,
+    threading: [0, 0, 0, 0],
+    tieUp: [[true, true], [false, false]],
+    treadling: [0, 0, 0, 0, 0, 0]
+  });
+  const solidMarks = looseCells(solid);
+  assert.deepEqual(solidMarks.warpEnds, [1, 2, 3, 4]);
+  assert.deepEqual(solidMarks.weftPicks, []);
+  assert.equal(solidMarks.marks.every((row) => row.every(Boolean)), true);
+  const wrapped = createDraft({
+    ends: 4,
+    picks: 8,
+    shafts: 2,
+    treadles: 2,
+    threading: [0, 1, 1, 1],
+    tieUp: [[true, false], [false, true]],
+    treadling: [0, 0, 0, 1, 1, 0, 0, 0]
+  });
+  assert.deepEqual(looseCells(wrapped), {
+    warpEnds: [1],
+    weftPicks: [],
+    marks: [
+      [true, false, false, false],
+      [true, false, false, false],
+      [true, false, false, false],
+      [false, false, false, false],
+      [false, false, false, false],
+      [true, false, false, false],
+      [true, false, false, false],
+      [true, false, false, false]
+    ]
+  });
+  assert.deepEqual(floatReport(wrapped), {warp: 6, weft: 3, loose: true});
 });
 
 test('inverting, reversing, and turning a draft can be done twice', () => {

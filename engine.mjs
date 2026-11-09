@@ -188,14 +188,18 @@ function maxRun(line, wantWarp) {
   return best;
 }
 
+function columnAt(grid, end) {
+  const column = [];
+  for (let pick = 0; pick < grid.length; pick += 1) column.push(grid[pick][end]);
+  return column;
+}
+
 export function floatReport(draft) {
   const grid = warpUp(draft);
   let warp = 0;
   let weft = 0;
   for (let end = 0; end < draft.ends; end += 1) {
-    const column = [];
-    for (let pick = 0; pick < draft.picks; pick += 1) column.push(grid[pick][end]);
-    const run = maxRun(column, true);
+    const run = maxRun(columnAt(grid, end), true);
     if (run > warp) warp = run;
   }
   for (const row of grid) {
@@ -203,6 +207,72 @@ export function floatReport(draft) {
     if (run > weft) weft = run;
   }
   return {warp, weft, loose: warp > 4 || weft > 4};
+}
+
+function markRuns(line, wantWarp, best, visit) {
+  const count = line.length;
+  let run = 0;
+  for (let index = 0; index < count; index += 1) {
+    if (shows(line[index], wantWarp)) {
+      run += 1;
+      if (run === best) {
+        for (let cursor = index - best + 1; cursor <= index; cursor += 1) visit(cursor);
+      }
+    } else {
+      run = 0;
+    }
+  }
+  if (best === count) return;
+  let prefix = 0;
+  while (prefix < count && shows(line[prefix], wantWarp)) prefix += 1;
+  let suffix = 0;
+  while (suffix < count - prefix && shows(line[count - 1 - suffix], wantWarp)) suffix += 1;
+  if (prefix > 0 && suffix > 0 && prefix + suffix === best) {
+    for (let cursor = 0; cursor < prefix; cursor += 1) visit(cursor);
+    for (let cursor = 0; cursor < suffix; cursor += 1) visit(count - 1 - cursor);
+  }
+}
+
+export function looseCells(draft) {
+  const grid = warpUp(draft);
+  const marks = Array.from({length: draft.picks}, () => Array.from({length: draft.ends}, () => false));
+  const warpEnds = [];
+  const weftPicks = [];
+  const columns = [];
+  const columnRuns = [];
+  let warp = 0;
+  for (let end = 0; end < draft.ends; end += 1) {
+    const column = columnAt(grid, end);
+    columns.push(column);
+    const run = maxRun(column, true);
+    columnRuns.push(run);
+    if (run > warp) warp = run;
+  }
+  let weft = 0;
+  const rowRuns = grid.map((row) => {
+    const run = maxRun(row, false);
+    if (run > weft) weft = run;
+    return run;
+  });
+  if (warp > 4) {
+    columns.forEach((column, end) => {
+      if (columnRuns[end] !== warp) return;
+      warpEnds.push(end + 1);
+      markRuns(column, true, warp, (pick) => {
+        marks[pick][end] = true;
+      });
+    });
+  }
+  if (weft > 4) {
+    grid.forEach((row, pick) => {
+      if (rowRuns[pick] !== weft) return;
+      weftPicks.push(pick + 1);
+      markRuns(row, false, weft, (end) => {
+        marks[pick][end] = true;
+      });
+    });
+  }
+  return {marks, warpEnds, weftPicks};
 }
 
 export const DEFAULT_WARP = '#1e2a4a';
