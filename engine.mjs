@@ -149,6 +149,29 @@ export function turnDraft(draft) {
   });
 }
 
+export function sequenceRepeat(values) {
+  const count = values.length;
+  for (let size = 1; size <= count; size += 1) {
+    if (count % size !== 0) continue;
+    let fits = true;
+    for (let index = size; index < count; index += 1) {
+      if (values[index] !== values[index % size]) {
+        fits = false;
+        break;
+      }
+    }
+    if (fits) return size;
+  }
+  return count;
+}
+
+export function clothRepeat(draft) {
+  return {
+    ends: sequenceRepeat(draft.threading),
+    picks: sequenceRepeat(draft.treadling)
+  };
+}
+
 export function warpFace(draft) {
   const grid = warpUp(draft);
   let up = 0;

@@ -1,4 +1,4 @@
-import {DEFAULT_WARP, DEFAULT_WEFT, LIMITS, draftFromJSON, editCell, floatReport, formatDraft, invertShed, looseCells, normalizeColor, parseDraftText, resize, reverseTreadling, turnDraft, warpFace, warpUp} from './engine.mjs';
+import {DEFAULT_WARP, DEFAULT_WEFT, LIMITS, clothRepeat, draftFromJSON, editCell, floatReport, formatDraft, invertShed, looseCells, normalizeColor, parseDraftText, resize, reverseTreadling, turnDraft, warpFace, warpUp} from './engine.mjs';
 import {PRESETS, plainWeave} from './drafts.mjs';
 import {recordChange, redoChange, undoChange} from './history.mjs';
 
@@ -315,11 +315,23 @@ function refreshCell(kind, row, col) {
   }
   if (loadNote === '') sizeMsg.textContent = '';
   showStats();
+  syncClothCaption();
   markPresets();
   if (!scriptDirty) scriptBox.value = formatDraft(draft, yarn);
   paintCloth();
   remember();
   syncHistory();
+}
+
+function syncClothCaption() {
+  const unit = clothRepeat(draft);
+  const endsRepeat = unit.ends < draft.ends;
+  const picksRepeat = unit.picks < draft.picks;
+  let cycle = '';
+  if (endsRepeat && picksRepeat) cycle = `，每 ${unit.ends} 经 × ${unit.picks} 纬一循环`;
+  else if (endsRepeat) cycle = `，每 ${unit.ends} 经一循环`;
+  else if (picksRepeat) cycle = `，每 ${unit.picks} 纬一循环`;
+  clothSize.textContent = `${draft.ends} 经 × ${draft.picks} 纬${repeat === 2 ? '，并了两份' : ''}${cycle}`;
 }
 
 function showStats() {
@@ -340,9 +352,7 @@ function showStats() {
 function render() {
   if (loadNote === '') sizeMsg.textContent = '';
   showStats();
-  clothSize.textContent = repeat === 2
-    ? `${draft.ends} 经 × ${draft.picks} 纬，并了两份`
-    : `${draft.ends} 经 × ${draft.picks} 纬`;
+  syncClothCaption();
   syncSize();
   warpInput.value = yarn.warp;
   weftInput.value = yarn.weft;

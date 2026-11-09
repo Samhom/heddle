@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {createDraft, draftFromJSON, editCell, floatReport, formatDraft, invertShed, looseCells, parseDraftText, resize, reverseTreadling, turnDraft, warpFace, warpUp} from '../engine.mjs';
+import {clothRepeat, createDraft, draftFromJSON, editCell, floatReport, formatDraft, invertShed, looseCells, parseDraftText, resize, reverseTreadling, turnDraft, warpFace, warpUp} from '../engine.mjs';
 import {herringbone, plainWeave, satin, twill} from '../drafts.mjs';
 
 function rowBits(row) {
@@ -107,6 +107,23 @@ test('only floats longer than four are marked, including across the repeat', () 
     ]
   });
   assert.deepEqual(floatReport(wrapped), {warp: 6, weft: 3, loose: true});
+});
+
+test('the cloth repeat is the threading and treadling cycle', () => {
+  assert.deepEqual(clothRepeat(plainWeave()), {ends: 2, picks: 2});
+  assert.deepEqual(clothRepeat(twill()), {ends: 4, picks: 4});
+  assert.deepEqual(clothRepeat(herringbone()), {ends: 6, picks: 6});
+  assert.deepEqual(clothRepeat(satin()), {ends: 5, picks: 5});
+  const once = createDraft({
+    ends: 6,
+    picks: 4,
+    shafts: 4,
+    treadles: 2,
+    threading: [0, 1, 2, 3, 0, 1],
+    tieUp: [[true, false], [false, true], [true, false], [false, true]],
+    treadling: [0, 1, 0, 1]
+  });
+  assert.deepEqual(clothRepeat(once), {ends: 6, picks: 2});
 });
 
 test('inverting, reversing, and turning a draft can be done twice', () => {
