@@ -135,6 +135,35 @@ export function reverseTreadling(draft) {
   });
 }
 
+function straightSequence(length, count) {
+  return Array.from({length}, (_, index) => index % count);
+}
+
+function pointedSequence(length, count) {
+  const unit = [];
+  for (let index = 0; index < count; index += 1) unit.push(index);
+  for (let index = count - 2; index >= 1; index -= 1) unit.push(index);
+  return Array.from({length}, (_, index) => unit[index % unit.length]);
+}
+
+export function straightThreading(draft) {
+  return createDraft({...draft, threading: straightSequence(draft.ends, draft.shafts)});
+}
+
+export function pointedThreading(draft) {
+  return createDraft({...draft, threading: pointedSequence(draft.ends, draft.shafts)});
+}
+
+export function treadleAsDrawn(draft) {
+  return createDraft({
+    ...draft,
+    treadling: Array.from({length: draft.picks}, (_, index) => {
+      const shaft = draft.threading[index % draft.ends];
+      return shaft < draft.treadles ? shaft : draft.treadles - 1;
+    })
+  });
+}
+
 export function turnDraft(draft) {
   return createDraft({
     ends: draft.picks,

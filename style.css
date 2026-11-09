@@ -70,7 +70,7 @@ button { cursor: pointer; }
 .pill:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 .pill:disabled { opacity: 0.45; cursor: default; }
 .pill:disabled:hover { border-color: var(--line); }
-.history, .moves { display: flex; gap: 8px; }
+.history, .moves, .fills { display: flex; gap: 8px; }
 .face {
   margin-left: auto;
   padding: 6px 12px;

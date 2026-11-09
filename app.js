@@ -1,4 +1,4 @@
-import {DEFAULT_WARP, DEFAULT_WEFT, LIMITS, clothRepeat, draftFromJSON, editCell, floatReport, formatDraft, invertShed, loomNotes, looseCells, normalizeColor, parseDraftText, resize, reverseTreadling, turnDraft, warpFace, warpUp} from './engine.mjs';
+import {DEFAULT_WARP, DEFAULT_WEFT, LIMITS, clothRepeat, draftFromJSON, editCell, floatReport, formatDraft, invertShed, loomNotes, looseCells, normalizeColor, parseDraftText, pointedThreading, resize, reverseTreadling, straightThreading, treadleAsDrawn, turnDraft, warpFace, warpUp} from './engine.mjs';
 import {PRESETS, plainWeave} from './drafts.mjs';
 import {recordChange, redoChange, undoChange} from './history.mjs';
 
@@ -28,6 +28,9 @@ const redoButton = document.querySelector('#redo');
 const invertButton = document.querySelector('#invert');
 const reverseButton = document.querySelector('#reverse');
 const turnButton = document.querySelector('#turn');
+const straightButton = document.querySelector('#straight');
+const pointedButton = document.querySelector('#pointed');
+const asDrawnButton = document.querySelector('#as-drawn');
 const scriptBox = document.querySelector('#script');
 const scriptMsg = document.querySelector('#script-msg');
 const sizeInputs = {
@@ -448,6 +451,9 @@ redoButton.addEventListener('click', redo);
 invertButton.addEventListener('click', () => applyMove(invertShed));
 reverseButton.addEventListener('click', () => applyMove(reverseTreadling));
 turnButton.addEventListener('click', () => applyMove(turnDraft));
+straightButton.addEventListener('click', () => applyMove(straightThreading));
+pointedButton.addEventListener('click', () => applyMove(pointedThreading));
+asDrawnButton.addEventListener('click', () => applyMove(treadleAsDrawn));
 document.addEventListener('keydown', (event) => {
   if ((event.ctrlKey || event.metaKey) && !event.altKey && !isTyping(event.target)) {
     const key = event.key.toLowerCase();

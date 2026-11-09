@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {clothRepeat, createDraft, draftFromJSON, editCell, floatReport, formatDraft, invertShed, loomNotes, looseCells, parseDraftText, resize, reverseTreadling, turnDraft, warpFace, warpUp} from '../engine.mjs';
+import {clothRepeat, createDraft, draftFromJSON, editCell, floatReport, formatDraft, invertShed, loomNotes, looseCells, parseDraftText, pointedThreading, resize, reverseTreadling, straightThreading, treadleAsDrawn, turnDraft, warpFace, warpUp} from '../engine.mjs';
 import {herringbone, plainWeave, satin, twill} from '../drafts.mjs';
 
 function rowBits(row) {
@@ -143,6 +143,32 @@ test('inverting, reversing, and turning a draft can be done twice', () => {
   assert.equal(turned.shafts, draft.treadles);
   assert.equal(turned.tieUp[1][2], draft.tieUp[2][1]);
   assert.deepEqual(turned.threading, draft.treadling);
+});
+
+test('straight, pointed, and as-drawn fills keep the tie-up', () => {
+  const bone = herringbone(12, 8);
+  const straight = straightThreading(bone);
+  assert.deepEqual(straight.threading, [0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3]);
+  assert.deepEqual(straight.tieUp, bone.tieUp);
+  assert.notDeepEqual(bone.threading, straight.threading);
+  const pointed = pointedThreading(bone);
+  assert.deepEqual(pointed.threading, [0, 1, 2, 3, 2, 1, 0, 1, 2, 3, 2, 1]);
+  assert.deepEqual(pointed.tieUp, bone.tieUp);
+  const drawn = treadleAsDrawn(pointed);
+  assert.deepEqual(drawn.treadling, [0, 1, 2, 3, 2, 1, 0, 1]);
+  assert.deepEqual(pointed.treadling, bone.treadling);
+  const narrow = createDraft({
+    ends: 8,
+    picks: 4,
+    shafts: 4,
+    treadles: 2,
+    threading: [0, 1, 2, 3, 0, 1, 2, 3],
+    tieUp: [[true, false], [false, true], [true, false], [false, true]],
+    treadling: [0, 1, 0, 1]
+  });
+  assert.deepEqual(treadleAsDrawn(narrow).treadling, [0, 1, 1, 1]);
+  assert.deepEqual(narrow.treadling, [0, 1, 0, 1]);
+  assert.deepEqual(pointedThreading(plainWeave(8, 8)).threading, plainWeave(8, 8).threading);
 });
 
 test('a cell edit changes one end, one tie, or one pick', () => {
