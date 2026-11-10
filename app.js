@@ -1,4 +1,4 @@
-import {DEFAULT_WARP, DEFAULT_WARP_ALT, DEFAULT_WEFT, DEFAULT_WEFT_ALT, LIMITS, clothRepeat, draftFromJSON, editCell, floatReport, formatDraft, invertShed, loomNotes, looseCells, normalizeColor, parseDraftText, pointedThreading, resize, reverseTreadling, straightThreading, stripeColor, treadleAsDrawn, turnDraft, warpFace, warpUp} from './engine.mjs';
+import {DEFAULT_WARP, DEFAULT_WARP_ALT, DEFAULT_WEFT, DEFAULT_WEFT_ALT, LIMITS, clothRepeat, draftFromJSON, editCell, floatReport, formatDraft, invertShed, loomNotes, looseCells, normalizeColor, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, straightThreading, stripeColor, treadleAsDrawn, turnDraft, warpFace, warpUp} from './engine.mjs';
 import {PRESETS, plainWeave} from './drafts.mjs';
 import {recordChange, redoChange, undoChange} from './history.mjs';
 
@@ -31,6 +31,7 @@ const undoButton = document.querySelector('#undo');
 const redoButton = document.querySelector('#redo');
 const invertButton = document.querySelector('#invert');
 const reverseButton = document.querySelector('#reverse');
+const mirrorButton = document.querySelector('#mirror');
 const turnButton = document.querySelector('#turn');
 const straightButton = document.querySelector('#straight');
 const pointedButton = document.querySelector('#pointed');
@@ -511,6 +512,7 @@ undoButton.addEventListener('click', undo);
 redoButton.addEventListener('click', redo);
 invertButton.addEventListener('click', () => applyMove(invertShed));
 reverseButton.addEventListener('click', () => applyMove(reverseTreadling));
+mirrorButton.addEventListener('click', () => applyMove(reverseThreading));
 turnButton.addEventListener('click', () => applyMove(turnDraft));
 straightButton.addEventListener('click', () => applyMove(straightThreading));
 pointedButton.addEventListener('click', () => applyMove(pointedThreading));

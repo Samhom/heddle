@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {DEFAULT_WARP_ALT, clothRepeat, createDraft, draftFromJSON, editCell, floatReport, formatDraft, invertShed, loomNotes, looseCells, parseDraftText, pointedThreading, resize, reverseTreadling, straightThreading, stripeColor, treadleAsDrawn, turnDraft, warpFace, warpUp} from '../engine.mjs';
+import {DEFAULT_WARP_ALT, clothRepeat, createDraft, draftFromJSON, editCell, floatReport, formatDraft, invertShed, loomNotes, looseCells, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, straightThreading, stripeColor, treadleAsDrawn, turnDraft, warpFace, warpUp} from '../engine.mjs';
 import {herringbone, plainWeave, satin, twill} from '../drafts.mjs';
 
 function rowBits(row) {
@@ -143,6 +143,17 @@ test('inverting, reversing, and turning a draft can be done twice', () => {
   assert.equal(turned.shafts, draft.treadles);
   assert.equal(turned.tieUp[1][2], draft.tieUp[2][1]);
   assert.deepEqual(turned.threading, draft.treadling);
+});
+
+test('mirroring the threading reverses the cloth and can be undone', () => {
+  const draft = twill(8, 4);
+  const mirrored = reverseThreading(draft);
+  assert.deepEqual(mirrored.threading, [3, 2, 1, 0, 3, 2, 1, 0]);
+  assert.deepEqual(mirrored.tieUp, draft.tieUp);
+  assert.deepEqual(mirrored.treadling, draft.treadling);
+  assert.deepEqual(draft.threading, [0, 1, 2, 3, 0, 1, 2, 3]);
+  assert.deepEqual(reverseThreading(mirrored), draft);
+  assert.equal(rowBits(warpUp(mirrored)[0]), '00110011');
 });
 
 test('straight, pointed, and as-drawn fills keep the tie-up', () => {

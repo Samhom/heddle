@@ -135,6 +135,13 @@ export function reverseTreadling(draft) {
   });
 }
 
+export function reverseThreading(draft) {
+  return createDraft({
+    ...draft,
+    threading: draft.threading.slice().reverse()
+  });
+}
+
 function straightSequence(length, count) {
   return Array.from({length}, (_, index) => index % count);
 }
