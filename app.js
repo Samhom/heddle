@@ -47,6 +47,7 @@ const sizeInputs = {
   treadles: document.querySelector('#treadles')
 };
 const ctx = cloth.getContext('2d');
+let pointer = null;
 
 const sizeLabels = {ends: '经线', picks: '纬线', shafts: '综片', treadles: '踏板'};
 for (const [key, input] of Object.entries(sizeInputs)) {
@@ -244,6 +245,14 @@ function paintCloth() {
             ? stripeColor(copyX * draft.ends + end, yarn.warpBlock, yarn.warp, yarn.warpAlt)
             : stripeColor(copyY * draft.picks + pick, yarn.weftBlock, yarn.weft, yarn.weftAlt);
           ctx.fillRect(x, y, CELL, CELL);
+          const marked = pointer && (
+            (pointer.axis === 'end' && end === pointer.index) ||
+            (pointer.axis === 'pick' && pick === pointer.index)
+          );
+          if (marked) {
+            ctx.fillStyle = 'rgba(166, 132, 61, 0.38)';
+            ctx.fillRect(x, y, CELL, CELL);
+          }
           if (loose.marks[pick][end]) ctx.strokeRect(x + 1, y + 1, CELL - 2, CELL - 2);
         }
       }
@@ -375,6 +384,7 @@ function showStats() {
 }
 
 function render() {
+  pointer = null;
   if (loadNote === '') sizeMsg.textContent = '';
   showStats();
   syncClothCaption();
@@ -537,6 +547,48 @@ pointedButton.addEventListener('click', () => applyMove(pointedThreading));
 asDrawnButton.addEventListener('click', () => applyMove(treadleAsDrawn));
 tabbyButton.addEventListener('click', () => applyMove(tabbyTie));
 twillButton.addEventListener('click', () => applyMove(twillTie));
+
+function pointerFrom(host, target) {
+  const cell = target instanceof Element ? target.closest('.cell') : null;
+  if (!cell || !host.contains(cell)) return null;
+  if (host === threadingHost) return {axis: 'end', index: Number(cell.dataset.col)};
+  return {axis: 'pick', index: Number(cell.dataset.row)};
+}
+
+function setPointer(next) {
+  if (pointer?.axis === next?.axis && pointer?.index === next?.index) return;
+  pointer = next;
+  paintCloth();
+}
+
+function watchPointer(host) {
+  const follow = (target) => {
+    const next = pointerFrom(host, target);
+    if (next) setPointer(next);
+  };
+  host.addEventListener('pointerover', (event) => follow(event.target));
+  host.addEventListener('focusin', (event) => follow(event.target));
+  host.addEventListener('pointerout', (event) => {
+    if (host.contains(event.relatedTarget)) return;
+    const focused = document.activeElement;
+    if (focused instanceof Element && host.contains(focused) && focused.classList.contains('cell')) {
+      follow(focused);
+      return;
+    }
+    setPointer(null);
+  });
+  host.addEventListener('focusout', (event) => {
+    if (host.contains(event.relatedTarget)) return;
+    const hovered = host.querySelector('.cell:hover');
+    if (hovered) {
+      follow(hovered);
+      return;
+    }
+    setPointer(null);
+  });
+}
+watchPointer(threadingHost);
+watchPointer(treadHost);
 document.addEventListener('keydown', (event) => {
   if ((event.ctrlKey || event.metaKey) && !event.altKey && !isTyping(event.target)) {
     const key = event.key.toLowerCase();
