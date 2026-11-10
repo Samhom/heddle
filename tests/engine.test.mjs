@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {DEFAULT_WARP_ALT, clothRepeat, createDraft, draftFromJSON, editCell, floatReport, formatDraft, invertShed, loomNotes, looseCells, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, straightThreading, stripeColor, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp} from '../engine.mjs';
+import {DEFAULT_WARP_ALT, balanceNote, clothRepeat, createDraft, draftFromJSON, editCell, floatReport, formatDraft, invertShed, loomNotes, looseCells, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, straightThreading, stripeColor, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp} from '../engine.mjs';
 import {herringbone, plainWeave, satin, twill} from '../drafts.mjs';
 
 function rowBits(row) {
@@ -220,6 +220,31 @@ test('a cell edit changes one end, one tie, or one pick', () => {
   assert.equal(rowBits(warpUp(stepped)[0]), '0101');
   assert.throws(() => editCell(draft, {grid: 'cloth', row: 0, col: 0}), /没有这一格/);
   assert.throws(() => editCell(draft, {grid: 'threading', row: 5, col: 0}), /不在这张图上/);
+});
+
+test('a shaft with twice the ends of another is named', () => {
+  assert.equal(balanceNote(plainWeave()), '');
+  assert.equal(balanceNote(herringbone()), '');
+  const crowded = createDraft({
+    ends: 16,
+    picks: 4,
+    shafts: 4,
+    treadles: 2,
+    threading: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1],
+    tieUp: [[true, false], [false, true], [false, false], [false, false]],
+    treadling: [0, 1, 0, 1]
+  });
+  assert.equal(balanceNote(crowded), '第 1 片综穿了 12 根，第 2 片只穿了 4 根');
+  const twice = createDraft({
+    ...crowded,
+    threading: [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2]
+  });
+  assert.equal(balanceNote(twice), '');
+  const single = createDraft({
+    ...crowded,
+    threading: Array.from({length: 16}, () => 0)
+  });
+  assert.equal(balanceNote(single), '');
 });
 
 test('empty shafts and treadles that lift nothing are named', () => {

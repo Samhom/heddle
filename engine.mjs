@@ -232,6 +232,23 @@ export function loomNotes(draft) {
   return notes;
 }
 
+export function balanceNote(draft) {
+  const counts = Array.from({length: draft.shafts}, () => 0);
+  for (const shaft of draft.threading) counts[shaft] += 1;
+  const used = counts.filter((count) => count > 0);
+  if (used.length < 2) return '';
+  const most = Math.max(...used);
+  const least = Math.min(...used);
+  if (most <= least * 2) return '';
+  const heavy = [];
+  const light = [];
+  counts.forEach((count, shaft) => {
+    if (count === most) heavy.push(shaft + 1);
+    if (count > 0 && count === least) light.push(shaft + 1);
+  });
+  return `第 ${heavy.join('、')} 片综穿了 ${most} 根，第 ${light.join('、')} 片只穿了 ${least} 根`;
+}
+
 export function sequenceRepeat(values) {
   const count = values.length;
   for (let size = 1; size <= count; size += 1) {
