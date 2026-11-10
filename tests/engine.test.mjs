@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {DEFAULT_WARP_ALT, clothRepeat, createDraft, draftFromJSON, editCell, floatReport, formatDraft, invertShed, loomNotes, looseCells, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, straightThreading, stripeColor, treadleAsDrawn, turnDraft, warpFace, warpUp} from '../engine.mjs';
+import {DEFAULT_WARP_ALT, clothRepeat, createDraft, draftFromJSON, editCell, floatReport, formatDraft, invertShed, loomNotes, looseCells, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, straightThreading, stripeColor, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp} from '../engine.mjs';
 import {herringbone, plainWeave, satin, twill} from '../drafts.mjs';
 
 function rowBits(row) {
@@ -180,6 +180,31 @@ test('straight, pointed, and as-drawn fills keep the tie-up', () => {
   assert.deepEqual(treadleAsDrawn(narrow).treadling, [0, 1, 1, 1]);
   assert.deepEqual(narrow.treadling, [0, 1, 0, 1]);
   assert.deepEqual(pointedThreading(plainWeave(8, 8)).threading, plainWeave(8, 8).threading);
+});
+
+test('tabby and twill ties leave the threading and treadling alone', () => {
+  const draft = twill(8, 6);
+  const tabby = tabbyTie(draft);
+  assert.deepEqual(tabby.tieUp, [
+    [true, false, true, false],
+    [false, true, false, true],
+    [true, false, true, false],
+    [false, true, false, true]
+  ]);
+  assert.deepEqual(tabby.threading, draft.threading);
+  assert.deepEqual(tabby.treadling, draft.treadling);
+  assert.notDeepEqual(draft.tieUp, tabby.tieUp);
+  assert.deepEqual(twillTie(draft).tieUp, draft.tieUp);
+  const wide = resize(plainWeave(4, 4), {shafts: 4});
+  assert.deepEqual(tabbyTie(wide).tieUp, [
+    [true, false],
+    [false, true],
+    [true, false],
+    [false, true]
+  ]);
+  assert.deepEqual(wide.threading, plainWeave(4, 4).threading);
+  const two = plainWeave(4, 4);
+  assert.equal(twillTie(two).tieUp.every((row) => row.every(Boolean)), true);
 });
 
 test('a cell edit changes one end, one tie, or one pick', () => {

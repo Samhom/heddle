@@ -161,6 +161,23 @@ export function pointedThreading(draft) {
   return createDraft({...draft, threading: pointedSequence(draft.ends, draft.shafts)});
 }
 
+export function tabbyTie(draft) {
+  return createDraft({
+    ...draft,
+    tieUp: draft.tieUp.map((row, shaft) => row.map((_, treadle) => shaft % 2 === treadle % 2))
+  });
+}
+
+export function twillTie(draft) {
+  return createDraft({
+    ...draft,
+    tieUp: draft.tieUp.map((row, shaft) => row.map((_, treadle) => {
+      const step = treadle % draft.shafts;
+      return shaft === step || shaft === (step + 1) % draft.shafts;
+    }))
+  });
+}
+
 export function treadleAsDrawn(draft) {
   return createDraft({
     ...draft,

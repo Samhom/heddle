@@ -1,4 +1,4 @@
-import {DEFAULT_WARP, DEFAULT_WARP_ALT, DEFAULT_WEFT, DEFAULT_WEFT_ALT, LIMITS, clothRepeat, draftFromJSON, editCell, floatReport, formatDraft, invertShed, loomNotes, looseCells, normalizeColor, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, straightThreading, stripeColor, treadleAsDrawn, turnDraft, warpFace, warpUp} from './engine.mjs';
+import {DEFAULT_WARP, DEFAULT_WARP_ALT, DEFAULT_WEFT, DEFAULT_WEFT_ALT, LIMITS, clothRepeat, draftFromJSON, editCell, floatReport, formatDraft, invertShed, loomNotes, looseCells, normalizeColor, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, straightThreading, stripeColor, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp} from './engine.mjs';
 import {PRESETS, plainWeave} from './drafts.mjs';
 import {recordChange, redoChange, undoChange} from './history.mjs';
 
@@ -36,6 +36,8 @@ const turnButton = document.querySelector('#turn');
 const straightButton = document.querySelector('#straight');
 const pointedButton = document.querySelector('#pointed');
 const asDrawnButton = document.querySelector('#as-drawn');
+const tabbyButton = document.querySelector('#tabby-tie');
+const twillButton = document.querySelector('#twill-tie');
 const scriptBox = document.querySelector('#script');
 const scriptMsg = document.querySelector('#script-msg');
 const sizeInputs = {
@@ -517,6 +519,8 @@ turnButton.addEventListener('click', () => applyMove(turnDraft));
 straightButton.addEventListener('click', () => applyMove(straightThreading));
 pointedButton.addEventListener('click', () => applyMove(pointedThreading));
 asDrawnButton.addEventListener('click', () => applyMove(treadleAsDrawn));
+tabbyButton.addEventListener('click', () => applyMove(tabbyTie));
+twillButton.addEventListener('click', () => applyMove(twillTie));
 document.addEventListener('keydown', (event) => {
   if ((event.ctrlKey || event.metaKey) && !event.altKey && !isTyping(event.target)) {
     const key = event.key.toLowerCase();
