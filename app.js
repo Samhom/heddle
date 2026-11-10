@@ -467,6 +467,22 @@ repeatButton.addEventListener('click', () => {
 scriptBox.addEventListener('input', () => {
   scriptDirty = true;
 });
+document.querySelector('#download-script').addEventListener('click', () => {
+  const text = formatDraft(draft, yarn);
+  scriptDirty = false;
+  scriptBox.value = text;
+  const blob = new Blob([text], {type: 'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'heddle.txt';
+  link.rel = 'noopener';
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  scriptMsg.textContent = '已下载 heddle.txt';
+});
 document.querySelector('#copy-script').addEventListener('click', async () => {
   const text = formatDraft(draft, yarn);
   scriptDirty = false;
