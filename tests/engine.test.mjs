@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {DEFAULT_WARP_ALT, balanceNote, clothRepeat, createDraft, draftFromJSON, editCell, floatReport, formatDraft, invertShed, loomNotes, looseCells, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, straightThreading, stripeColor, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp} from '../engine.mjs';
+import {DEFAULT_WARP_ALT, balanceNote, clothRepeat, createDraft, draftFromJSON, editCell, floatReport, formatDraft, fullLiftNote, invertShed, loomNotes, looseCells, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, straightThreading, stripeColor, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp} from '../engine.mjs';
 import {herringbone, plainWeave, satin, twill} from '../drafts.mjs';
 
 function rowBits(row) {
@@ -245,6 +245,24 @@ test('a shaft with twice the ends of another is named', () => {
     threading: Array.from({length: 16}, () => 0)
   });
   assert.equal(balanceNote(single), '');
+});
+
+test('a treadle that lifts every shaft is named only when a pick uses it', () => {
+  assert.equal(fullLiftNote(plainWeave()), '');
+  assert.equal(fullLiftNote(twill()), '');
+  const closed = twillTie(plainWeave(4, 4));
+  assert.equal(fullLiftNote(closed), '第 1、2 个踏板把综全提起来了，这一梭没有梭口');
+  assert.equal(plainWeave(4, 4).tieUp[0][0], true);
+  const idle = createDraft({
+    ends: 4,
+    picks: 4,
+    shafts: 2,
+    treadles: 2,
+    threading: [0, 1, 0, 1],
+    tieUp: [[true, true], [true, true]],
+    treadling: [0, 0, 0, 0]
+  });
+  assert.equal(fullLiftNote(idle), '第 1 个踏板把综全提起来了，这一梭没有梭口');
 });
 
 test('empty shafts and treadles that lift nothing are named', () => {

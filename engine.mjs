@@ -249,6 +249,17 @@ export function balanceNote(draft) {
   return `第 ${heavy.join('、')} 片综穿了 ${most} 根，第 ${light.join('、')} 片只穿了 ${least} 根`;
 }
 
+export function fullLiftNote(draft) {
+  const used = new Set(draft.treadling);
+  const full = [];
+  for (let treadle = 0; treadle < draft.treadles; treadle += 1) {
+    if (!used.has(treadle)) continue;
+    if (draft.tieUp.every((row) => row[treadle])) full.push(treadle + 1);
+  }
+  if (full.length === 0) return '';
+  return `第 ${full.join('、')} 个踏板把综全提起来了，这一梭没有梭口`;
+}
+
 export function sequenceRepeat(values) {
   const count = values.length;
   for (let size = 1; size <= count; size += 1) {
