@@ -1,4 +1,4 @@
-import {DEFAULT_WARP, DEFAULT_WARP_ALT, DEFAULT_WEFT, DEFAULT_WEFT_ALT, LIMITS, balanceNote, clothRepeat, draftFromJSON, editCell, floatReport, formatDraft, fullLiftNote, invertShed, loomNotes, looseCells, normalizeColor, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, straightThreading, stripeColor, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp, yarnNote} from './engine.mjs';
+import {DEFAULT_WARP, DEFAULT_WARP_ALT, DEFAULT_WEFT, DEFAULT_WEFT_ALT, LIMITS, TEXT_LIMIT, balanceNote, clothRepeat, draftFromJSON, editCell, floatReport, formatDraft, fullLiftNote, invertShed, loomNotes, looseCells, normalizeColor, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, straightThreading, stripeColor, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp, yarnNote} from './engine.mjs';
 import {PRESETS, plainWeave} from './drafts.mjs';
 import {recordChange, redoChange, undoChange} from './history.mjs';
 
@@ -514,22 +514,44 @@ document.querySelector('#copy-script').addEventListener('click', async () => {
     scriptMsg.textContent = '浏览器没有允许复制，文字已经选中';
   }
 });
+function useParsed(parsed, message) {
+  commitDraft(parsed.draft);
+  yarn = {
+    warp: parsed.warp,
+    weft: parsed.weft,
+    warpAlt: parsed.warpAlt,
+    weftAlt: parsed.weftAlt,
+    warpBlock: parsed.warpBlock,
+    weftBlock: parsed.weftBlock
+  };
+  scriptDirty = false;
+  scriptMsg.textContent = message;
+  pendingFocus = null;
+  render();
+}
+
 document.querySelector('#read-script').addEventListener('click', () => {
   try {
-    const parsed = parseDraftText(scriptBox.value);
-    commitDraft(parsed.draft);
-    yarn = {
-      warp: parsed.warp,
-      weft: parsed.weft,
-      warpAlt: parsed.warpAlt,
-      weftAlt: parsed.weftAlt,
-      warpBlock: parsed.warpBlock,
-      weftBlock: parsed.weftBlock
-    };
-    scriptDirty = false;
-    scriptMsg.textContent = '已按这段排好';
-    pendingFocus = null;
-    render();
+    useParsed(parseDraftText(scriptBox.value), '已按这段排好');
+  } catch (error) {
+    scriptMsg.textContent = error instanceof Error ? error.message : '这段没有排成';
+  }
+});
+const openFile = document.querySelector('#open-file');
+document.querySelector('#open-script').addEventListener('click', () => {
+  openFile.value = '';
+  openFile.click();
+});
+openFile.addEventListener('change', async () => {
+  const file = openFile.files?.[0];
+  openFile.value = '';
+  if (!file) return;
+  if (file.size > TEXT_LIMIT) {
+    scriptMsg.textContent = '这份组织图太长';
+    return;
+  }
+  try {
+    useParsed(parseDraftText(await file.text()), '已从文件排好');
   } catch (error) {
     scriptMsg.textContent = error instanceof Error ? error.message : '这段没有排成';
   }

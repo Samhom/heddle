@@ -413,7 +413,7 @@ export const DEFAULT_WARP = '#1e2a4a';
 export const DEFAULT_WEFT = '#f7f1e6';
 export const DEFAULT_WARP_ALT = '#8d3b32';
 export const DEFAULT_WEFT_ALT = '#c4b49a';
-const TEXT_LIMIT = 20000;
+export const TEXT_LIMIT = 20000;
 
 export function clampBlock(value) {
   return Number.isInteger(value) && value >= 0 && value <= 8 ? value : 0;
