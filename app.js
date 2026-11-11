@@ -364,7 +364,10 @@ function syncClothCaption() {
   if (endsRepeat && picksRepeat) cycle = `，每 ${unit.ends} 经 × ${unit.picks} 纬一循环`;
   else if (endsRepeat) cycle = `，每 ${unit.ends} 经一循环`;
   else if (picksRepeat) cycle = `，每 ${unit.picks} 纬一循环`;
-  clothSize.textContent = `${draft.ends} 经 × ${draft.picks} 纬${repeat === 2 ? '，并了两份' : ''}${cycle}`;
+  let where = '';
+  if (pointer?.axis === 'end' && pointer.index >= 0 && pointer.index < draft.ends) where = `，第 ${pointer.index + 1} 根经`;
+  else if (pointer?.axis === 'pick' && pointer.index >= 0 && pointer.index < draft.picks) where = `，第 ${pointer.index + 1} 梭`;
+  clothSize.textContent = `${draft.ends} 经 × ${draft.picks} 纬${repeat === 2 ? '，并了两份' : ''}${cycle}${where}`;
 }
 
 function showStats() {
@@ -563,6 +566,7 @@ function pointerFrom(host, target) {
 function setPointer(next) {
   if (pointer?.axis === next?.axis && pointer?.index === next?.index) return;
   pointer = next;
+  syncClothCaption();
   paintCloth();
 }
 
