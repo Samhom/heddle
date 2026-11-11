@@ -30,6 +30,11 @@
         <button class="pill" type="button" id="undo" disabled>撤回</button>
         <button class="pill" type="button" id="redo" disabled>重做</button>
       </div>
+      <div class="history" role="group" aria-label="留底">
+        <button class="pill" type="button" id="keep" title="把现在的穿综、打结和踏板留在一边，颜色不留">留底</button>
+        <button class="pill" type="button" id="swap" title="把留着的换上来，现在这张留回去" disabled>换上</button>
+      </div>
+      <p class="msg" id="keep-msg" role="status"></p>
       <div class="moves" role="group" aria-label="翻动组织">
         <button class="pill" type="button" id="invert" title="每个结反过来，看布的另一面">反面</button>
         <button class="pill" type="button" id="reverse" title="从最后一梭倒着踩，斜纹会换方向">倒踏</button>

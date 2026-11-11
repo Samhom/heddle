@@ -29,6 +29,9 @@ const weftBlockInput = document.querySelector('#weft-block');
 const repeatButton = document.querySelector('#repeat');
 const undoButton = document.querySelector('#undo');
 const redoButton = document.querySelector('#redo');
+const keepButton = document.querySelector('#keep');
+const swapButton = document.querySelector('#swap');
+const keepMsg = document.querySelector('#keep-msg');
 const invertButton = document.querySelector('#invert');
 const reverseButton = document.querySelector('#reverse');
 const mirrorButton = document.querySelector('#mirror');
@@ -71,6 +74,9 @@ let loadNote = '';
 let scriptDirty = false;
 
 const STORAGE_KEY = 'heddle.draft';
+const KEPT_KEY = 'heddle.kept';
+let kept = null;
+let keptNote = '';
 
 function recall() {
   try {
@@ -117,7 +123,50 @@ function remember() {
   }
 }
 
+function draftRecord(source) {
+  return {
+    ends: source.ends,
+    picks: source.picks,
+    shafts: source.shafts,
+    treadles: source.treadles,
+    threading: source.threading,
+    tieUp: source.tieUp,
+    treadling: source.treadling
+  };
+}
+
+function recallKept() {
+  try {
+    const raw = localStorage.getItem(KEPT_KEY);
+    if (!raw) return;
+    if (raw.length > 20000) {
+      keptNote = '留底读不出来';
+      return;
+    }
+    kept = draftFromJSON(JSON.parse(raw)).draft;
+  } catch {
+    kept = null;
+    keptNote = '留底读不出来';
+  }
+}
+
+function storeKept(source) {
+  const payload = JSON.stringify(draftRecord(source));
+  if (payload.length > 20000) return false;
+  localStorage.setItem(KEPT_KEY, payload);
+  kept = draftFromJSON(JSON.parse(payload)).draft;
+  return true;
+}
+
+function syncKept() {
+  swapButton.disabled = kept === null;
+  if (keptNote === '') return;
+  keepMsg.textContent = keptNote;
+  keptNote = '';
+}
+
 recall();
+recallKept();
 
 for (const preset of PRESETS) {
   const button = document.createElement('button');
@@ -429,6 +478,7 @@ function render() {
   paintCloth();
   pendingFocus = null;
   syncHistory();
+  syncKept();
 }
 
 function syncYarnInputs() {
@@ -568,6 +618,38 @@ function applyMove(change) {
 
 undoButton.addEventListener('click', undo);
 redoButton.addEventListener('click', redo);
+keepButton.addEventListener('click', () => {
+  try {
+    if (!storeKept(draft)) {
+      keepMsg.textContent = '这张图留不下';
+      return;
+    }
+  } catch {
+    keepMsg.textContent = '这张图留不下';
+    return;
+  }
+  keepMsg.textContent = '已留底';
+  syncKept();
+});
+swapButton.addEventListener('click', () => {
+  if (!kept) return;
+  const incoming = kept;
+  try {
+    if (!storeKept(draft)) {
+      keepMsg.textContent = '这张图留不下';
+      return;
+    }
+  } catch {
+    keepMsg.textContent = '这张图留不下';
+    return;
+  }
+  const changed = commitDraft(incoming);
+  pendingFocus = null;
+  scriptDirty = false;
+  keepMsg.textContent = '已换上';
+  if (changed) render();
+  else syncKept();
+});
 invertButton.addEventListener('click', () => applyMove(invertShed));
 reverseButton.addEventListener('click', () => applyMove(reverseTreadling));
 mirrorButton.addEventListener('click', () => applyMove(reverseThreading));
