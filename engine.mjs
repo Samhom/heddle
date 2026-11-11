@@ -430,6 +430,31 @@ export function normalizeColor(value, fallback) {
   return match ? `#${match[1].toLowerCase()}` : fallback;
 }
 
+function linearChannel(hex, offset) {
+  const value = Number.parseInt(hex.slice(offset, offset + 2), 16) / 255;
+  return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+}
+
+export function colorContrast(left, right) {
+  const luminance = (hex) => (
+    0.2126 * linearChannel(hex, 1) +
+    0.7152 * linearChannel(hex, 3) +
+    0.0722 * linearChannel(hex, 5)
+  );
+  const lighter = Math.max(luminance(left), luminance(right));
+  const darker = Math.min(luminance(left), luminance(right));
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+export function yarnNote(yarn) {
+  const pairs = [[yarn.warp, yarn.weft]];
+  if (yarn.warpBlock > 0) pairs.push([yarn.warpAlt, yarn.weft]);
+  if (yarn.weftBlock > 0) pairs.push([yarn.warp, yarn.weftAlt]);
+  if (yarn.warpBlock > 0 && yarn.weftBlock > 0) pairs.push([yarn.warpAlt, yarn.weftAlt]);
+  if (pairs.some(([left, right]) => colorContrast(left, right) < 2)) return '经色和纬色太接近，布面看不清';
+  return '';
+}
+
 export function formatDraft(draft, yarn = {}) {
   const warp = normalizeColor(yarn.warp, DEFAULT_WARP);
   const weft = normalizeColor(yarn.weft, DEFAULT_WEFT);

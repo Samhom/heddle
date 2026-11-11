@@ -1,4 +1,4 @@
-import {DEFAULT_WARP, DEFAULT_WARP_ALT, DEFAULT_WEFT, DEFAULT_WEFT_ALT, LIMITS, balanceNote, clothRepeat, draftFromJSON, editCell, floatReport, formatDraft, fullLiftNote, invertShed, loomNotes, looseCells, normalizeColor, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, straightThreading, stripeColor, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp} from './engine.mjs';
+import {DEFAULT_WARP, DEFAULT_WARP_ALT, DEFAULT_WEFT, DEFAULT_WEFT_ALT, LIMITS, balanceNote, clothRepeat, draftFromJSON, editCell, floatReport, formatDraft, fullLiftNote, invertShed, loomNotes, looseCells, normalizeColor, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, straightThreading, stripeColor, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp, yarnNote} from './engine.mjs';
 import {PRESETS, plainWeave} from './drafts.mjs';
 import {recordChange, redoChange, undoChange} from './history.mjs';
 
@@ -380,7 +380,11 @@ function showStats() {
   face.title = floats.loose
     ? `最长浮长 ${longest}，超过 4 根布容易松，出在${places.join('，')}。布面上用铜色圈出。循环接到下一份时连着的也算。`
     : '经浮是一根经连续压住的纬，纬浮是一梭纬连续压住的经。循环接到下一份时连着的也算。';
-  loomNote.textContent = [...loomNotes(draft), balanceNote(draft), fullLiftNote(draft)].filter(Boolean).join('。');
+  syncLoomNote();
+}
+
+function syncLoomNote() {
+  loomNote.textContent = [...loomNotes(draft), balanceNote(draft), fullLiftNote(draft), yarnNote(yarn)].filter(Boolean).join('。');
 }
 
 function render() {
@@ -444,6 +448,7 @@ function paintView() {
   syncClothCaption();
   if (!scriptDirty) scriptBox.value = formatDraft(draft, yarn);
   paintCloth();
+  syncLoomNote();
   remember();
 }
 

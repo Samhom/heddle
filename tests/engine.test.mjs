@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {DEFAULT_WARP_ALT, balanceNote, clothRepeat, createDraft, draftFromJSON, editCell, floatReport, formatDraft, fullLiftNote, invertShed, loomNotes, looseCells, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, straightThreading, stripeColor, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp} from '../engine.mjs';
+import {DEFAULT_WARP, DEFAULT_WARP_ALT, DEFAULT_WEFT, DEFAULT_WEFT_ALT, balanceNote, clothRepeat, colorContrast, createDraft, draftFromJSON, editCell, floatReport, formatDraft, fullLiftNote, invertShed, loomNotes, looseCells, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, straightThreading, stripeColor, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp, yarnNote} from '../engine.mjs';
 import {herringbone, plainWeave, satin, twill} from '../drafts.mjs';
 
 function rowBits(row) {
@@ -245,6 +245,15 @@ test('a shaft with twice the ends of another is named', () => {
     threading: Array.from({length: 16}, () => 0)
   });
   assert.equal(balanceNote(single), '');
+});
+
+test('close warp and weft colors are named, and an unused stripe is not', () => {
+  const plain = {warp: DEFAULT_WARP, weft: DEFAULT_WEFT, warpAlt: DEFAULT_WARP_ALT, weftAlt: DEFAULT_WEFT_ALT, warpBlock: 0, weftBlock: 0};
+  assert.ok(colorContrast(DEFAULT_WARP, DEFAULT_WEFT) > 2);
+  assert.equal(yarnNote(plain), '');
+  assert.equal(yarnNote({...plain, weft: '#24324f'}), '经色和纬色太接近，布面看不清');
+  assert.equal(yarnNote({...plain, warpAlt: '#f4efe4'}), '');
+  assert.equal(yarnNote({...plain, warpBlock: 2, warpAlt: '#f4efe4'}), '经色和纬色太接近，布面看不清');
 });
 
 test('a treadle that lifts every shaft is named only when a pick uses it', () => {
