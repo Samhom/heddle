@@ -207,6 +207,13 @@ figcaption small {
   font-size: 12px;
   letter-spacing: 0;
 }
+figcaption .pill {
+  margin-left: 10px;
+  padding: 2px 10px;
+  font-family: var(--sans);
+  font-size: 13px;
+  letter-spacing: 0;
+}
 .cells {
   display: grid;
   gap: var(--gap);

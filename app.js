@@ -52,7 +52,6 @@ const sizeInputs = {
   shafts: document.querySelector('#shafts'),
   treadles: document.querySelector('#treadles')
 };
-const ctx = cloth.getContext('2d');
 let pointer = null;
 
 const sizeLabels = {ends: '经线', picks: '纬线', shafts: '综片', treadles: '踏板'};
@@ -299,44 +298,50 @@ function paintGrid(host, kind, rows, cols, labelAt, isOn) {
   host.append(fragment);
 }
 
-function paintCloth() {
+function drawCloth(target, {showPointer, showLoose, ratio}) {
   const step = CELL + GAP;
   const copies = repeat === 2 ? 2 : 1;
-  const ratio = window.devicePixelRatio || 1;
   const width = draft.ends * copies * step - GAP;
   const height = draft.picks * copies * step - GAP;
-  cloth.width = Math.round(width * ratio);
-  cloth.height = Math.round(height * ratio);
-  cloth.style.width = `${width}px`;
-  cloth.style.height = `${height}px`;
-  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  target.width = Math.round(width * ratio);
+  target.height = Math.round(height * ratio);
+  if (target === cloth) {
+    cloth.style.width = `${width}px`;
+    cloth.style.height = `${height}px`;
+  }
+  const context = target.getContext('2d');
+  context.setTransform(ratio, 0, 0, ratio, 0, 0);
   const grid = warpUp(draft);
-  const loose = looseCells(draft);
-  ctx.lineWidth = 1.5;
-  ctx.strokeStyle = '#a6843d';
+  const loose = showLoose ? looseCells(draft) : null;
+  context.lineWidth = 1.5;
+  context.strokeStyle = '#a6843d';
   for (let copyY = 0; copyY < copies; copyY += 1) {
     for (let copyX = 0; copyX < copies; copyX += 1) {
       for (let pick = 0; pick < draft.picks; pick += 1) {
         for (let end = 0; end < draft.ends; end += 1) {
           const x = (copyX * draft.ends + end) * step;
           const y = (copyY * draft.picks + pick) * step;
-          ctx.fillStyle = grid[pick][end]
+          context.fillStyle = grid[pick][end]
             ? stripeColor(copyX * draft.ends + end, yarn.warpBlock, yarn.warp, yarn.warpAlt)
             : stripeColor(copyY * draft.picks + pick, yarn.weftBlock, yarn.weft, yarn.weftAlt);
-          ctx.fillRect(x, y, CELL, CELL);
-          const marked = pointer && (
+          context.fillRect(x, y, CELL, CELL);
+          const marked = showPointer && pointer && (
             (pointer.axis === 'end' && end === pointer.index) ||
             (pointer.axis === 'pick' && pick === pointer.index)
           );
           if (marked) {
-            ctx.fillStyle = 'rgba(166, 132, 61, 0.38)';
-            ctx.fillRect(x, y, CELL, CELL);
+            context.fillStyle = 'rgba(166, 132, 61, 0.38)';
+            context.fillRect(x, y, CELL, CELL);
           }
-          if (loose.marks[pick][end]) ctx.strokeRect(x + 1, y + 1, CELL - 2, CELL - 2);
+          if (loose?.marks[pick][end]) context.strokeRect(x + 1, y + 1, CELL - 2, CELL - 2);
         }
       }
     }
   }
+}
+
+function paintCloth() {
+  drawCloth(cloth, {showPointer: true, showLoose: true, ratio: window.devicePixelRatio || 1});
 }
 
 function compactNumbers(numbers) {
@@ -576,6 +581,25 @@ repeatButton.addEventListener('click', () => {
 });
 scriptBox.addEventListener('input', () => {
   scriptDirty = true;
+});
+document.querySelector('#save-cloth').addEventListener('click', () => {
+  const board = document.createElement('canvas');
+  drawCloth(board, {showPointer: false, showLoose: false, ratio: 1});
+  board.toBlob((blob) => {
+    if (!blob) {
+      sizeMsg.textContent = '布面没有存下来';
+      return;
+    }
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'heddle-cloth.png';
+    link.rel = 'noopener';
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }, 'image/png');
 });
 document.querySelector('#download-script').addEventListener('click', () => {
   const text = formatDraft(draft, yarn);
