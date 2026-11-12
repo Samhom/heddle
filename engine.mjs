@@ -326,6 +326,21 @@ export function cropToRepeat(draft) {
   return resize(draft, {ends, picks});
 }
 
+export function keptDiff(current, kept) {
+  if (!kept) return {threading: null, tieUp: null, treadling: null};
+  return {
+    threading: current.ends === kept.ends && current.shafts === kept.shafts
+      ? current.threading.map((shaft, index) => shaft !== kept.threading[index])
+      : null,
+    tieUp: current.shafts === kept.shafts && current.treadles === kept.treadles
+      ? current.tieUp.map((row, shaft) => row.map((cell, treadle) => cell !== kept.tieUp[shaft][treadle]))
+      : null,
+    treadling: current.picks === kept.picks && current.treadles === kept.treadles
+      ? current.treadling.map((treadle, index) => treadle !== kept.treadling[index])
+      : null
+  };
+}
+
 export function warpFace(draft) {
   const grid = warpUp(draft);
   let up = 0;

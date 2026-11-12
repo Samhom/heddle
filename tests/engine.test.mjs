@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {DEFAULT_WARP, DEFAULT_WARP_ALT, DEFAULT_WEFT, DEFAULT_WEFT_ALT, balanceNote, clothRepeat, colorContrast, createDraft, cropToRepeat, draftFromJSON, editCell, floatReport, formatDraft, fullLiftNote, invertShed, loomNotes, looseCells, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, rollThreading, rollTreadling, straightThreading, stripeColor, stuckShaftNote, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp, yarnNote} from '../engine.mjs';
+import {DEFAULT_WARP, DEFAULT_WARP_ALT, DEFAULT_WEFT, DEFAULT_WEFT_ALT, balanceNote, clothRepeat, colorContrast, createDraft, cropToRepeat, draftFromJSON, editCell, floatReport, formatDraft, fullLiftNote, invertShed, keptDiff, loomNotes, looseCells, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, rollThreading, rollTreadling, straightThreading, stripeColor, stuckShaftNote, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp, yarnNote} from '../engine.mjs';
 import {herringbone, plainWeave, satin, twill} from '../drafts.mjs';
 
 function rowBits(row) {
@@ -135,6 +135,25 @@ test('cropping keeps one repeat and does not go under the loom minimum', () => {
   assert.equal(partial.ends, 4);
   assert.equal(partial.picks, 8);
   assert.deepEqual(partial.tieUp, uneven.tieUp);
+});
+
+test('a kept draft marks only the cells that differ, and skips a grid whose size differs', () => {
+  const current = plainWeave(4, 4);
+  assert.equal(keptDiff(current, null).threading, null);
+  const same = keptDiff(current, plainWeave(4, 4));
+  assert.equal(same.threading.some(Boolean), false);
+  assert.equal(same.tieUp.some((row) => row.some(Boolean)), false);
+  assert.equal(same.treadling.some(Boolean), false);
+  const shifted = keptDiff(rollThreading(current), current);
+  assert.deepEqual(shifted.threading, [true, true, true, true]);
+  assert.equal(shifted.tieUp.some((row) => row.some(Boolean)), false);
+  assert.equal(shifted.treadling.some(Boolean), false);
+  const tied = keptDiff(editCell(current, {grid: 'tie', row: 1, col: 0}), current);
+  assert.deepEqual(tied.tieUp, [[true, false], [false, false]]);
+  assert.equal(tied.threading.some(Boolean), false);
+  const wider = keptDiff(resize(current, {ends: 8}), current);
+  assert.equal(wider.threading, null);
+  assert.equal(wider.tieUp.some((row) => row.some(Boolean)), false);
 });
 
 test('the cloth repeat is the threading and treadling cycle', () => {

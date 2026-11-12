@@ -229,6 +229,7 @@ figcaption small {
 .cell.on:hover { filter: brightness(1.25); }
 .tie .cell.on { background: var(--madder); }
 .tread .cell.on { background: var(--moss); }
+.cell.diff { box-shadow: inset 0 0 0 2px var(--brass); }
 .cell:focus-visible {
   outline: 2px solid var(--brass);
   outline-offset: 1px;

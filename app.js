@@ -1,4 +1,4 @@
-import {DEFAULT_WARP, DEFAULT_WARP_ALT, DEFAULT_WEFT, DEFAULT_WEFT_ALT, LIMITS, TEXT_LIMIT, balanceNote, clothRepeat, cropToRepeat, draftFromJSON, editCell, floatReport, formatDraft, fullLiftNote, invertShed, loomNotes, looseCells, normalizeColor, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, rollThreading, rollTreadling, straightThreading, stripeColor, stuckShaftNote, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp, yarnNote} from './engine.mjs';
+import {DEFAULT_WARP, DEFAULT_WARP_ALT, DEFAULT_WEFT, DEFAULT_WEFT_ALT, LIMITS, TEXT_LIMIT, balanceNote, clothRepeat, cropToRepeat, draftFromJSON, editCell, floatReport, formatDraft, fullLiftNote, invertShed, keptDiff, loomNotes, looseCells, normalizeColor, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, rollThreading, rollTreadling, straightThreading, stripeColor, stuckShaftNote, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp, yarnNote} from './engine.mjs';
 import {PRESETS, plainWeave} from './drafts.mjs';
 import {recordChange, redoChange, undoChange} from './history.mjs';
 
@@ -242,10 +242,36 @@ function paintRulers() {
   fillRuler(treadNumbers, draft.treadles, (index) => String(index + 1));
 }
 
+function differsAt(diff, kind, row, col) {
+  if (kind === 'threading') return Boolean(diff.threading?.[col]);
+  if (kind === 'tie') return Boolean(diff.tieUp?.[shaftAt(row)]?.[col]);
+  return Boolean(diff.treadling?.[row]);
+}
+
+function paintDiff(button, diff, kind, row, col) {
+  button.classList.toggle('diff', differsAt(diff, kind, row, col));
+}
+
+function markKeptDiffs() {
+  const diff = keptDiff(draft, kept);
+  const paintHost = (host, kind, rows, cols) => {
+    for (let row = 0; row < rows; row += 1) {
+      for (let col = 0; col < cols; col += 1) {
+        const button = buttonAt(host, row, col, cols);
+        if (button) paintDiff(button, diff, kind, row, col);
+      }
+    }
+  };
+  paintHost(threadingHost, 'threading', draft.shafts, draft.ends);
+  paintHost(tieHost, 'tie', draft.shafts, draft.treadles);
+  paintHost(treadHost, 'treadling', draft.picks, draft.treadles);
+}
+
 function paintGrid(host, kind, rows, cols, labelAt, isOn) {
   host.replaceChildren();
   host.style.gridTemplateColumns = `repeat(${cols}, ${CELL}px)`;
   host.style.gridTemplateRows = `repeat(${rows}, ${CELL}px)`;
+  const diff = keptDiff(draft, kept);
   const fragment = document.createDocumentFragment();
   for (let row = 0; row < rows; row += 1) {
     for (let col = 0; col < cols; col += 1) {
@@ -253,6 +279,7 @@ function paintGrid(host, kind, rows, cols, labelAt, isOn) {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = on ? 'cell on' : 'cell';
+      if (differsAt(diff, kind, row, col)) button.classList.add('diff');
       const label = labelAt(row, col);
       button.title = label;
       button.setAttribute('aria-label', label);
@@ -396,6 +423,18 @@ function refreshCell(kind, row, col) {
   } else if (kind === 'treadling') {
     for (let treadle = 0; treadle < draft.treadles; treadle += 1) {
       paintPressed(buttonAt(treadHost, row, treadle, draft.treadles), draft.treadling[row] === treadle);
+    }
+  }
+  const diff = keptDiff(draft, kept);
+  if (kind === 'threading') {
+    for (let shaftRow = 0; shaftRow < draft.shafts; shaftRow += 1) {
+      paintDiff(buttonAt(threadingHost, shaftRow, col, draft.ends), diff, kind, shaftRow, col);
+    }
+  } else if (kind === 'tie') {
+    paintDiff(buttonAt(tieHost, row, col, draft.treadles), diff, kind, row, col);
+  } else if (kind === 'treadling') {
+    for (let treadle = 0; treadle < draft.treadles; treadle += 1) {
+      paintDiff(buttonAt(treadHost, row, treadle, draft.treadles), diff, kind, row, treadle);
     }
   }
   if (loadNote === '') sizeMsg.textContent = '';
@@ -633,6 +672,7 @@ keepButton.addEventListener('click', () => {
   }
   keepMsg.textContent = '已留底';
   syncKept();
+  markKeptDiffs();
 });
 swapButton.addEventListener('click', () => {
   if (!kept) return;
