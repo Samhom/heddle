@@ -1,4 +1,4 @@
-import {DEFAULT_WARP, DEFAULT_WARP_ALT, DEFAULT_WEFT, DEFAULT_WEFT_ALT, LIMITS, TEXT_LIMIT, balanceNote, clothRepeat, draftFromJSON, editCell, floatReport, formatDraft, fullLiftNote, invertShed, loomNotes, looseCells, normalizeColor, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, straightThreading, stripeColor, stuckShaftNote, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp, yarnNote} from './engine.mjs';
+import {DEFAULT_WARP, DEFAULT_WARP_ALT, DEFAULT_WEFT, DEFAULT_WEFT_ALT, LIMITS, TEXT_LIMIT, balanceNote, clothRepeat, cropToRepeat, draftFromJSON, editCell, floatReport, formatDraft, fullLiftNote, invertShed, loomNotes, looseCells, normalizeColor, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, straightThreading, stripeColor, stuckShaftNote, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp, yarnNote} from './engine.mjs';
 import {PRESETS, plainWeave} from './drafts.mjs';
 import {recordChange, redoChange, undoChange} from './history.mjs';
 
@@ -41,6 +41,7 @@ const pointedButton = document.querySelector('#pointed');
 const asDrawnButton = document.querySelector('#as-drawn');
 const tabbyButton = document.querySelector('#tabby-tie');
 const twillButton = document.querySelector('#twill-tie');
+const cropButton = document.querySelector('#crop');
 const scriptBox = document.querySelector('#script');
 const scriptMsg = document.querySelector('#script-msg');
 const sizeInputs = {
@@ -659,6 +660,14 @@ pointedButton.addEventListener('click', () => applyMove(pointedThreading));
 asDrawnButton.addEventListener('click', () => applyMove(treadleAsDrawn));
 tabbyButton.addEventListener('click', () => applyMove(tabbyTie));
 twillButton.addEventListener('click', () => applyMove(twillTie));
+cropButton.addEventListener('click', () => {
+  if (!commitDraft(cropToRepeat(draft))) {
+    sizeMsg.textContent = '已经是一个循环';
+    return;
+  }
+  pendingFocus = null;
+  render();
+});
 
 function pointerFrom(host, target) {
   const cell = target instanceof Element ? target.closest('.cell') : null;

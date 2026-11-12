@@ -300,6 +300,20 @@ export function clothRepeat(draft) {
   };
 }
 
+function croppedLength(length, repeat, min) {
+  let size = repeat;
+  while (size < min) size += repeat;
+  return size < length ? size : length;
+}
+
+export function cropToRepeat(draft) {
+  const unit = clothRepeat(draft);
+  const ends = croppedLength(draft.ends, unit.ends, LIMITS.ends.min);
+  const picks = croppedLength(draft.picks, unit.picks, LIMITS.picks.min);
+  if (ends === draft.ends && picks === draft.picks) return draft;
+  return resize(draft, {ends, picks});
+}
+
 export function warpFace(draft) {
   const grid = warpUp(draft);
   let up = 0;

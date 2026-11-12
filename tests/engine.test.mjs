@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {DEFAULT_WARP, DEFAULT_WARP_ALT, DEFAULT_WEFT, DEFAULT_WEFT_ALT, balanceNote, clothRepeat, colorContrast, createDraft, draftFromJSON, editCell, floatReport, formatDraft, fullLiftNote, invertShed, loomNotes, looseCells, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, straightThreading, stripeColor, stuckShaftNote, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp, yarnNote} from '../engine.mjs';
+import {DEFAULT_WARP, DEFAULT_WARP_ALT, DEFAULT_WEFT, DEFAULT_WEFT_ALT, balanceNote, clothRepeat, colorContrast, createDraft, cropToRepeat, draftFromJSON, editCell, floatReport, formatDraft, fullLiftNote, invertShed, loomNotes, looseCells, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, straightThreading, stripeColor, stuckShaftNote, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp, yarnNote} from '../engine.mjs';
 import {herringbone, plainWeave, satin, twill} from '../drafts.mjs';
 
 function rowBits(row) {
@@ -107,6 +107,34 @@ test('only floats longer than four are marked, including across the repeat', () 
     ]
   });
   assert.deepEqual(floatReport(wrapped), {warp: 6, weft: 3, loose: true});
+});
+
+test('cropping keeps one repeat and does not go under the loom minimum', () => {
+  const plain = plainWeave();
+  const cropped = cropToRepeat(plain);
+  assert.equal(cropped.ends, 4);
+  assert.equal(cropped.picks, 4);
+  assert.deepEqual(cropped.threading, [0, 1, 0, 1]);
+  assert.deepEqual(cropped.treadling, [0, 1, 0, 1]);
+  assert.deepEqual(cropped.tieUp, plain.tieUp);
+  assert.equal(plain.ends, 16);
+  assert.equal(cropToRepeat(cropped), cropped);
+  assert.equal(cropToRepeat(twill()).ends, 4);
+  assert.equal(cropToRepeat(herringbone()).ends, 6);
+  assert.equal(cropToRepeat(satin()).picks, 5);
+  const uneven = createDraft({
+    ends: 8,
+    picks: 8,
+    shafts: 2,
+    treadles: 2,
+    threading: [0, 1, 0, 1, 0, 1, 0, 1],
+    tieUp: [[true, false], [false, true]],
+    treadling: [0, 1, 0, 1, 1, 0, 1, 0]
+  });
+  const partial = cropToRepeat(uneven);
+  assert.equal(partial.ends, 4);
+  assert.equal(partial.picks, 8);
+  assert.deepEqual(partial.tieUp, uneven.tieUp);
 });
 
 test('the cloth repeat is the threading and treadling cycle', () => {
