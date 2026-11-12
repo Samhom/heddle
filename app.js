@@ -1,4 +1,4 @@
-import {DEFAULT_WARP, DEFAULT_WARP_ALT, DEFAULT_WEFT, DEFAULT_WEFT_ALT, LIMITS, TEXT_LIMIT, balanceNote, clothRepeat, cropToRepeat, draftFromJSON, editCell, floatReport, formatDraft, fullLiftNote, invertShed, loomNotes, looseCells, normalizeColor, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, straightThreading, stripeColor, stuckShaftNote, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp, yarnNote} from './engine.mjs';
+import {DEFAULT_WARP, DEFAULT_WARP_ALT, DEFAULT_WEFT, DEFAULT_WEFT_ALT, LIMITS, TEXT_LIMIT, balanceNote, clothRepeat, cropToRepeat, draftFromJSON, editCell, floatReport, formatDraft, fullLiftNote, invertShed, loomNotes, looseCells, normalizeColor, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, rollThreading, rollTreadling, straightThreading, stripeColor, stuckShaftNote, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp, yarnNote} from './engine.mjs';
 import {PRESETS, plainWeave} from './drafts.mjs';
 import {recordChange, redoChange, undoChange} from './history.mjs';
 
@@ -36,6 +36,8 @@ const invertButton = document.querySelector('#invert');
 const reverseButton = document.querySelector('#reverse');
 const mirrorButton = document.querySelector('#mirror');
 const turnButton = document.querySelector('#turn');
+const rollThreadButton = document.querySelector('#roll-thread');
+const rollTreadButton = document.querySelector('#roll-tread');
 const straightButton = document.querySelector('#straight');
 const pointedButton = document.querySelector('#pointed');
 const asDrawnButton = document.querySelector('#as-drawn');
@@ -655,6 +657,8 @@ invertButton.addEventListener('click', () => applyMove(invertShed));
 reverseButton.addEventListener('click', () => applyMove(reverseTreadling));
 mirrorButton.addEventListener('click', () => applyMove(reverseThreading));
 turnButton.addEventListener('click', () => applyMove(turnDraft));
+rollThreadButton.addEventListener('click', () => applyMove(rollThreading));
+rollTreadButton.addEventListener('click', () => applyMove(rollTreadling));
 straightButton.addEventListener('click', () => applyMove(straightThreading));
 pointedButton.addEventListener('click', () => applyMove(pointedThreading));
 asDrawnButton.addEventListener('click', () => applyMove(treadleAsDrawn));

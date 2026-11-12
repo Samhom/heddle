@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {DEFAULT_WARP, DEFAULT_WARP_ALT, DEFAULT_WEFT, DEFAULT_WEFT_ALT, balanceNote, clothRepeat, colorContrast, createDraft, cropToRepeat, draftFromJSON, editCell, floatReport, formatDraft, fullLiftNote, invertShed, loomNotes, looseCells, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, straightThreading, stripeColor, stuckShaftNote, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp, yarnNote} from '../engine.mjs';
+import {DEFAULT_WARP, DEFAULT_WARP_ALT, DEFAULT_WEFT, DEFAULT_WEFT_ALT, balanceNote, clothRepeat, colorContrast, createDraft, cropToRepeat, draftFromJSON, editCell, floatReport, formatDraft, fullLiftNote, invertShed, loomNotes, looseCells, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, rollThreading, rollTreadling, straightThreading, stripeColor, stuckShaftNote, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp, yarnNote} from '../engine.mjs';
 import {herringbone, plainWeave, satin, twill} from '../drafts.mjs';
 
 function rowBits(row) {
@@ -171,6 +171,26 @@ test('inverting, reversing, and turning a draft can be done twice', () => {
   assert.equal(turned.shafts, draft.treadles);
   assert.equal(turned.tieUp[1][2], draft.tieUp[2][1]);
   assert.deepEqual(turned.threading, draft.treadling);
+});
+
+test('rolling the threading or the treadling one place comes back around', () => {
+  const draft = twill(8, 8);
+  const shifted = rollThreading(draft);
+  assert.deepEqual(shifted.threading, [1, 2, 3, 0, 1, 2, 3, 0]);
+  assert.deepEqual(shifted.tieUp, draft.tieUp);
+  assert.deepEqual(shifted.treadling, draft.treadling);
+  assert.notEqual(rowBits(warpUp(shifted)[0]), rowBits(warpUp(draft)[0]));
+  let turned = draft;
+  for (let step = 0; step < draft.ends; step += 1) turned = rollThreading(turned);
+  assert.deepEqual(turned.threading, draft.threading);
+  const pick = rollTreadling(draft);
+  assert.deepEqual(pick.treadling, [1, 2, 3, 0, 1, 2, 3, 0]);
+  assert.deepEqual(pick.threading, draft.threading);
+  assert.deepEqual(pick.tieUp, draft.tieUp);
+  let walked = draft;
+  for (let step = 0; step < draft.picks; step += 1) walked = rollTreadling(walked);
+  assert.deepEqual(walked.treadling, draft.treadling);
+  assert.deepEqual(draft.threading, [0, 1, 2, 3, 0, 1, 2, 3]);
 });
 
 test('mirroring the threading reverses the cloth and can be undone', () => {

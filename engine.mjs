@@ -142,6 +142,18 @@ export function reverseThreading(draft) {
   });
 }
 
+function roll(values) {
+  return values.slice(1).concat(values[0]);
+}
+
+export function rollThreading(draft) {
+  return createDraft({...draft, threading: roll(draft.threading)});
+}
+
+export function rollTreadling(draft) {
+  return createDraft({...draft, treadling: roll(draft.treadling)});
+}
+
 function straightSequence(length, count) {
   return Array.from({length}, (_, index) => index % count);
 }
