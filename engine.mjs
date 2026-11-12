@@ -260,6 +260,23 @@ export function fullLiftNote(draft) {
   return `第 ${full.join('、')} 个踏板把综全提起来了，这一梭没有梭口`;
 }
 
+export function stuckShaftNote(draft) {
+  const usedShafts = new Set(draft.threading);
+  const usedTreadles = [...new Set(draft.treadling)];
+  const sunk = [];
+  const raised = [];
+  for (let shaft = 0; shaft < draft.shafts; shaft += 1) {
+    if (!usedShafts.has(shaft)) continue;
+    const lifts = usedTreadles.map((treadle) => draft.tieUp[shaft][treadle]);
+    if (lifts.every((cell) => !cell)) sunk.push(shaft + 1);
+    else if (lifts.every(Boolean)) raised.push(shaft + 1);
+  }
+  const notes = [];
+  if (sunk.length > 0) notes.push(`第 ${sunk.join('、')} 片综一次都没提，这几根经一直沉着`);
+  if (raised.length > 0) notes.push(`第 ${raised.join('、')} 片综每一梭都提着，这几根经没有交织`);
+  return notes.join('。');
+}
+
 export function sequenceRepeat(values) {
   const count = values.length;
   for (let size = 1; size <= count; size += 1) {

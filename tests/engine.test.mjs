@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {DEFAULT_WARP, DEFAULT_WARP_ALT, DEFAULT_WEFT, DEFAULT_WEFT_ALT, balanceNote, clothRepeat, colorContrast, createDraft, draftFromJSON, editCell, floatReport, formatDraft, fullLiftNote, invertShed, loomNotes, looseCells, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, straightThreading, stripeColor, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp, yarnNote} from '../engine.mjs';
+import {DEFAULT_WARP, DEFAULT_WARP_ALT, DEFAULT_WEFT, DEFAULT_WEFT_ALT, balanceNote, clothRepeat, colorContrast, createDraft, draftFromJSON, editCell, floatReport, formatDraft, fullLiftNote, invertShed, loomNotes, looseCells, parseDraftText, pointedThreading, resize, reverseThreading, reverseTreadling, straightThreading, stripeColor, stuckShaftNote, tabbyTie, treadleAsDrawn, turnDraft, twillTie, warpFace, warpUp, yarnNote} from '../engine.mjs';
 import {herringbone, plainWeave, satin, twill} from '../drafts.mjs';
 
 function rowBits(row) {
@@ -272,6 +272,47 @@ test('a treadle that lifts every shaft is named only when a pick uses it', () =>
     treadling: [0, 0, 0, 0]
   });
   assert.equal(fullLiftNote(idle), '第 1 个踏板把综全提起来了，这一梭没有梭口');
+});
+
+test('a shaft that never lifts or never sinks is named only when it carries warp', () => {
+  assert.equal(stuckShaftNote(plainWeave()), '');
+  assert.equal(stuckShaftNote(twill()), '');
+  assert.equal(stuckShaftNote(satin()), '');
+  const sunk = createDraft({
+    ...plainWeave(4, 4),
+    tieUp: [[false, false], [false, true]]
+  });
+  assert.equal(stuckShaftNote(sunk), '第 1 片综一次都没提，这几根经一直沉着');
+  const raised = createDraft({
+    ...plainWeave(4, 4),
+    tieUp: [[true, false], [true, true]]
+  });
+  assert.equal(stuckShaftNote(raised), '第 2 片综每一梭都提着，这几根经没有交织');
+  const unused = createDraft({
+    ends: 4,
+    picks: 4,
+    shafts: 4,
+    treadles: 2,
+    threading: [0, 1, 0, 1],
+    tieUp: [
+      [true, false],
+      [false, true],
+      [false, false],
+      [true, true]
+    ],
+    treadling: [0, 1, 0, 1]
+  });
+  assert.equal(stuckShaftNote(unused), '');
+  const hiddenLift = createDraft({
+    ends: 4,
+    picks: 4,
+    shafts: 2,
+    treadles: 3,
+    threading: [0, 1, 0, 1],
+    tieUp: [[false, false, true], [false, true, false]],
+    treadling: [0, 1, 0, 1]
+  });
+  assert.equal(stuckShaftNote(hiddenLift), '第 1 片综一次都没提，这几根经一直沉着');
 });
 
 test('empty shafts and treadles that lift nothing are named', () => {
